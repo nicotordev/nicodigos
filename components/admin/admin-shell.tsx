@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Logo from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 type AdminShellProps = {
@@ -107,8 +108,10 @@ function SidebarContent({
   return (
     <>
       <div className="px-5 py-5">
-        <p className="font-heading text-lg font-semibold">Repon Admin</p>
-        <p className="text-xs text-muted-foreground">E-commerce dashboard</p>
+        <Logo href="/admin" size="md" />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Tienda de keys digitales
+        </p>
       </div>
       <Separator />
       <SidebarNav onNavigate={onNavigate} />
@@ -152,9 +155,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             </SheetContent>
           </Sheet>
           <div className="min-w-0 md:hidden">
-            <p className="truncate font-heading text-sm font-semibold">
-              Repon Admin
-            </p>
+            <Logo href="/admin" size="sm" />
           </div>
         </header>
 
