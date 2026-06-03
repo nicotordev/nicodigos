@@ -34,7 +34,7 @@ const baseActions = [
   {
     title: "Soporte",
     description: "Ayuda con tu cuenta",
-    href: "mailto:soporte@nicodigos.com",
+    href: "mailto:contacto@nicodigos.cl",
     icon: IconHeadset,
   },
 ] as const;
@@ -84,7 +84,7 @@ export function QuickActions({ isAdmin }: QuickActionsProps) {
                   </p>
                 </div>
               </div>
-              
+
               <IconChevronRight className="size-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-primary ml-2 shrink-0" />
             </Link>
           );

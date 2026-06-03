@@ -45,8 +45,8 @@ export function ResendVerificationHero() {
               <span className="text-primary-foreground/55">bandeja.</span>
             </p>
             <p className="border-l-2 border-primary-foreground/30 pl-4 text-sm leading-relaxed text-primary-foreground/75">
-              El enlace de verificación puede tardar unos minutos. Revisa también
-              correo no deseado o promociones si no lo encuentras.
+              El enlace de verificación puede tardar unos minutos. Revisa
+              también correo no deseado o promociones si no lo encuentras.
             </p>
           </blockquote>
 
@@ -54,8 +54,12 @@ export function ResendVerificationHero() {
           <div className="group relative w-full max-w-sm rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.04] p-5 backdrop-blur-md shadow-2xl transition-all duration-300 hover:bg-primary-foreground/[0.08] hover:border-primary-foreground/25 hover:-translate-y-1 hover:shadow-primary-foreground/5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="flex size-5 items-center justify-center rounded-full bg-primary-foreground/20 text-primary-foreground text-[10px]">✉</span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/90">Correo entrante</span>
+                <span className="flex size-5 items-center justify-center rounded-full bg-primary-foreground/20 text-primary-foreground text-[10px]">
+                  ✉
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/90">
+                  Correo entrante
+                </span>
               </div>
               <span className="flex items-center gap-1.5 text-[9px] text-primary-foreground/75">
                 <span className="inline-block size-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -65,13 +69,19 @@ export function ResendVerificationHero() {
 
             <div className="space-y-2.5">
               <div className="rounded-lg bg-black/15 p-3 text-xs border border-primary-foreground/5">
-                <p className="font-semibold text-primary-foreground">Activa tu cuenta de Nicodigos</p>
-                <p className="text-primary-foreground/60 text-[10px] mt-0.5">Enviado hace unos instantes</p>
+                <p className="font-semibold text-primary-foreground">
+                  Activa tu cuenta de Nicodigos
+                </p>
+                <p className="text-primary-foreground/60 text-[10px] mt-0.5">
+                  Enviado hace unos instantes
+                </p>
               </div>
-              
+
               <div className="flex justify-between items-center text-[11px] text-primary-foreground/70 px-1">
-                <span>Remitente: no-reply@nicodigos.com</span>
-                <span className="font-mono text-[9px] bg-primary-foreground/10 px-1.5 py-0.5 rounded">Resend</span>
+                <span>Remitente: no-reply@nicodigos.cl</span>
+                <span className="font-mono text-[9px] bg-primary-foreground/10 px-1.5 py-0.5 rounded">
+                  Resend
+                </span>
               </div>
             </div>
           </div>

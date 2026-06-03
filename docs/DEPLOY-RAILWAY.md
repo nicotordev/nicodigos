@@ -100,7 +100,7 @@ Variables:
 
 1. **Settings** → **Config file path** = `/railway.cron.toml` (evita usar el `railway.toml` del web)
 2. Variables: `CRON_SECRET`, `BETTER_AUTH_URL` (referencias `${{nicodigos-web.*}}`)
-3. El schedule `*/15 * * * *` y el start `bun run scripts/cron-sync-catalog.ts` vienen de `railway.cron.toml`
+3. El schedule `*/15 * * * *` (cada 15 min, UTC) y el start `bun scripts/cron-sync-catalog.ts` vienen de `railway.cron.toml`
 
 Recrear servicio:
 
