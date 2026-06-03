@@ -123,10 +123,87 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
     @apply font-sans;
+  }
+}
+
+@keyframes auth-hero-grid-drift {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      40px 40px,
+      40px 40px;
+  }
+}
+
+@keyframes auth-hero-orb-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+@keyframes auth-hero-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes auth-hero-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-hero-grid {
+    animation: auth-hero-grid-drift 24s linear infinite;
+  }
+
+  .auth-hero-orb-a {
+    animation: auth-hero-orb-float 9s ease-in-out infinite;
+  }
+
+  .auth-hero-orb-b {
+    animation: auth-hero-orb-float 12s ease-in-out infinite reverse;
+  }
+
+  .auth-hero-orb-c {
+    animation: auth-hero-orb-float 5s ease-in-out infinite;
+  }
+
+  .auth-hero-orb-d {
+    animation: auth-hero-orb-float 7s ease-in-out infinite reverse;
+  }
+
+  .auth-hero-step {
+    animation: auth-hero-step-in 0.55s ease-out both;
+  }
+
+  .auth-hero-pulse {
+    animation: auth-hero-pulse-dot 2.2s ease-in-out infinite;
   }
 }

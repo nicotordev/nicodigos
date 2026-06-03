@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SignInForm } from "@/components/auth/sign-in-form";
-import { SignInHero } from "@/components/auth/sign-in-hero";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { ForgotPasswordHero } from "@/components/auth/forgot-password-hero";
 import Logo from "@/components/logo";
 import {
   Card,
@@ -11,22 +11,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  getSearchParam,
   normalizePageSearchParams,
   resolveCallbackURL,
 } from "@/lib/auth/sign-in-params";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión",
+  title: "Recuperar contraseña",
 };
 
-export default async function SignInPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = normalizePageSearchParams(await searchParams);
   const callbackURL = resolveCallbackURL(params);
-  const signUpHref = `/auth/sign-up?callbackUrl=${encodeURIComponent(callbackURL)}`;
+  const isSent = getSearchParam(params, "status") === "sent";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -36,29 +37,32 @@ export default async function SignInPage({
             <CardHeader className="flex flex-col items-center text-center space-y-2 pb-2">
               <Logo href="/" size="lg" priority className="mb-2" />
               <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-                Ingresa a tu biblioteca
+                {isSent ? "Correo enviado" : "¿Olvidaste tu contraseña?"}
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Accede para ver tus keys compradas, activar licencias y descubrir ofertas.{" "}
-                <span className="block mt-2 text-xs">
-                  ¿Eres nuevo en Nicodigos?{" "}
-                  <Link
-                    href={signUpHref}
-                    className="font-semibold text-primary hover:text-primary/80 transition-colors underline underline-offset-4"
-                  >
-                    Regístrate gratis aquí
-                  </Link>
-                </span>
+                {isSent ? (
+                  "Sigue las instrucciones del mensaje para crear una contraseña nueva."
+                ) : (
+                  <>
+                    Introduce el correo de tu cuenta y te enviaremos un enlace para restablecerla.{" "}
+                    <Link
+                      href={`/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`}
+                      className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Volver a iniciar sesión
+                    </Link>
+                  </>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SignInForm callbackURL={callbackURL} searchParams={params} />
+              <ForgotPasswordForm callbackURL={callbackURL} searchParams={params} />
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <SignInHero />
+      <ForgotPasswordHero />
     </div>
   );
 }

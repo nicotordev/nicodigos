@@ -3,7 +3,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import prisma from "@/lib/prisma";
 import { getResend } from "@/lib/resend";
-import { magicLink } from "better-auth/plugins";
+import { getTurnstileSecretKey, isTurnstileEnabled } from "@/lib/turnstile";
+import { captcha, magicLink } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -21,16 +22,32 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
+    ...(isTurnstileEnabled()
+      ? [
+          captcha({
+            provider: "cloudflare-turnstile",
+            secretKey: getTurnstileSecretKey(),
+            endpoints: [
+              "/sign-up/email",
+              "/sign-in/email",
+              "/sign-in/magic-link",
+              "/request-password-reset",
+              "/send-verification-email",
+            ],
+          }),
+        ]
+      : []),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
         await getResend().emails.send({
-          from: process.env.EMAIL_FROM!,
+          from: process.env.EMAIL_FROM ?? "Auth <onboarding@resend.dev>",
           to: email,
-          subject: "Sign in",
+          subject: "Tu enlace de acceso — nicodigos",
           html: `
-            <a href="${url}">
-              Sign in
-            </a>
+            <p>Hola,</p>
+            <p>Haz clic en el botón para acceder a tu cuenta en nicodigos. El enlace caduca en 5 minutos.</p>
+            <p><a href="${url}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#c2410c;color:#fff;text-decoration:none;font-weight:600;">Acceder a nicodigos</a></p>
+            <p style="color:#666;font-size:14px;">Si no solicitaste este correo, puedes ignorarlo.</p>
           `,
         });
       },
@@ -41,14 +58,16 @@ export const auth = betterAuth({
     requireEmailVerification: true,
 
     sendResetPassword: async ({ user, url }) => {
+      const greeting = user.name ? `Hola ${user.name},` : "Hola,";
       await getResend().emails.send({
         from: process.env.EMAIL_FROM ?? "Auth <onboarding@resend.dev>",
         to: user.email,
-        subject: "Reset your password",
+        subject: "Restablece tu contraseña — nicodigos",
         html: `
-          <p>Hello ${user.name ?? ""}</p>
-          <p>Click the link below to reset your password:</p>
-          <p><a href="${url}">Reset password</a></p>
+          <p>${greeting}</p>
+          <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en nicodigos.</p>
+          <p><a href="${url}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#c2410c;color:#fff;text-decoration:none;font-weight:600;">Restablecer contraseña</a></p>
+          <p style="color:#666;font-size:14px;">Si no solicitaste este cambio, puedes ignorar este correo. El enlace caduca en una hora.</p>
         `,
       });
     },
@@ -56,14 +75,16 @@ export const auth = betterAuth({
 
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
+      const greeting = user.name ? `Hola ${user.name},` : "Hola,";
       await getResend().emails.send({
         from: process.env.EMAIL_FROM ?? "Auth <onboarding@resend.dev>",
         to: user.email,
-        subject: "Verify your email",
+        subject: "Verifica tu correo — nicodigos",
         html: `
-          <p>Hello ${user.name ?? ""}</p>
-          <p>Click the link below to verify your email:</p>
-          <p><a href="${url}">Verify email</a></p>
+          <p>${greeting}</p>
+          <p>Gracias por registrarte en nicodigos. Confirma tu correo para activar tu cuenta:</p>
+          <p><a href="${url}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#c2410c;color:#fff;text-decoration:none;font-weight:600;">Verificar correo</a></p>
+          <p style="color:#666;font-size:14px;">Si no creaste esta cuenta, puedes ignorar este mensaje.</p>
         `,
       });
     },
