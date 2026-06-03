@@ -52,9 +52,9 @@ export default async function AdminPage() {
             </Link>
           </Button>
           <Button size="sm" asChild className="shadow-sm">
-            <Link href="/admin/products" className="flex items-center gap-1.5">
+            <Link href="/admin/products/new" className="flex items-center gap-1.5">
               <IconPlus className="size-4" />
-              Nuevo Producto
+              Nuevo producto
             </Link>
           </Button>
         </div>

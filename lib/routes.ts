@@ -7,6 +7,10 @@ export const routes = {
   admin: "/admin",
   adminProducts: "/admin/products",
   adminProductsNew: "/admin/products/new",
+  adminCategories: "/admin/categories",
+  adminCategoriesNew: "/admin/categories/new",
+  adminOrders: "/admin/orders",
+  adminTransactions: "/admin/transactions",
 } as const;
 
 /** Legacy Spanish paths → canonical English paths. */

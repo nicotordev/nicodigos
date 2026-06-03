@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/logo";
 import {
-  adminNavItems,
+  getAdminNavByGroup,
   isAdminNavActive,
   type AdminNavItem,
 } from "@/components/admin/admin-nav";
@@ -89,12 +89,14 @@ export function AdminAppSidebar({ user }: AdminAppSidebarProps) {
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <AdminSidebarMenu items={adminNavItems} />
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {getAdminNavByGroup().map(({ group, label, items }) => (
+          <SidebarGroup key={group}>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <AdminSidebarMenu items={items} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className={cn("pb-4")}>

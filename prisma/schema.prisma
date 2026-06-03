@@ -30,6 +30,7 @@ model User {
   accounts       Account[]
   cart           Cart?
   orders         Order[]
+  transactions   Transaction[]
   profile        UserProfile?
   identification UserIdentification?
   addresses      UserAddress[]
@@ -203,7 +204,11 @@ model Category {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
-  description String?
+  description String?   @db.Text
+  /// Icono o miniatura en listados y menú de la tienda.
+  imageUrl    String?
+  /// Banner ancho en la página o cabecera de la categoría.
+  bannerUrl   String?
   sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -361,20 +366,21 @@ model CartItem {
 // --- Orders ---
 
 model Order {
-  id                String      @id @default(cuid())
+  id                String        @id @default(cuid())
   userId            String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status            OrderStatus @default(PENDING)
-  currency          String      @default("CLP")
-  subtotal          Decimal     @db.Decimal(10, 2)
-  total             Decimal     @db.Decimal(10, 2)
-  kinguinOrderId    String?     @unique
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            OrderStatus   @default(PENDING)
+  currency          String        @default("CLP")
+  subtotal          Decimal       @db.Decimal(10, 2)
+  total             Decimal       @db.Decimal(10, 2)
+  kinguinOrderId    String?       @unique
   kinguinStatus     String?
-  isPreorder        Boolean     @default(false)
+  isPreorder        Boolean       @default(false)
   preorderReleaseAt DateTime?
   items             OrderItem[]
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  transactions      Transaction[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -439,4 +445,47 @@ enum OrderKeyStatus {
   RETURNED
   REFUNDED
   CANCELED
+}
+
+// --- Payments & ledger ---
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  PAYOUT
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId           String?
+  order             Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type              TransactionType
+  status            TransactionStatus @default(PENDING)
+  amount            Decimal           @db.Decimal(10, 2)
+  currency          String            @default("CLP")
+  provider          String            @default("internal")
+  providerReference String?
+  description       String?
+  metadata          Json?
+  idempotencyKey    String?           @unique
+  processedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("transaction")
 }

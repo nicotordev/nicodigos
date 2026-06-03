@@ -37,23 +37,28 @@ const platformConfig: Record<string, string> = {
 export function LowStockList({ products }: LowStockListProps) {
   return (
     <Card className="glass-card border-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-bold">Low stock alert</CardTitle>
+            <CardTitle className="text-lg font-bold">Stock bajo</CardTitle>
             {products.length > 0 ? (
               <span className="flex h-2 w-2 rounded-full bg-rose-500 pulse-dot" />
             ) : null}
           </div>
           <CardDescription>
-            Active products with fewer than 5 units remaining
+            Productos publicados con menos de 5 unidades
           </CardDescription>
         </div>
-        {products.length > 0 ? (
-          <Badge variant="destructive" className="font-semibold">
-            {products.length} {products.length === 1 ? "product" : "products"}
-          </Badge>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {products.length > 0 ? (
+            <Badge variant="destructive" className="font-semibold">
+              {products.length}
+            </Badge>
+          ) : null}
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/inventory">Inventario</Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {products.length === 0 ? (
@@ -117,8 +122,11 @@ export function LowStockList({ products }: LowStockListProps) {
                         asChild
                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-100 hover:bg-primary/10 hover:text-primary transition-all text-xs"
                       >
-                        <Link href={`/admin/products?search=${encodeURIComponent(product.name)}`} className="flex items-center gap-1">
-                          Manage <IconArrowRight className="size-3" />
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
+                          className="flex items-center gap-1"
+                        >
+                          Editar <IconArrowRight className="size-3" />
                         </Link>
                       </Button>
                     </div>

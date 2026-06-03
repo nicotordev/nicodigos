@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1060.0",
@@ -36,6 +40,7 @@
     "next-themes": "^0.4.6",
     "openai": "^6.41.0",
     "pg": "^8.21.0",
+    "prisma": "^7.8.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-day-picker": "^10.0.1",
@@ -61,7 +66,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
-    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"

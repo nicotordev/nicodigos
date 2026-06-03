@@ -8,13 +8,17 @@ import {
 import { extractKinguinProductVideos } from "@/lib/kinguin/product-videos";
 import type { ProductKinguinMetadata } from "@/lib/admin/products/kinguin-metadata";
 import { ProductImageSource } from "@/lib/generated/prisma/client";
+import {
+  pickPrimaryOffer,
+  resolveCatalogQty,
+} from "@/lib/catalog/kinguin-stock";
 import type { KinguinOffer, KinguinProduct } from "@/types/kinguin";
 
 function toDecimal(value: number): Prisma.Decimal {
   return new Prisma.Decimal(value.toFixed(2));
 }
 
-function mapOffer(
+export function mapOffer(
   offer: KinguinOffer,
   isDefault: boolean,
   eurToClpRate: number,
@@ -43,12 +47,10 @@ export function mapKinguinProductToCreateInput(
   eurToClpRate: number,
   metadata: ProductKinguinMetadata,
 ): Prisma.ProductCreateInput {
-  const cheapestIds = new Set(product.cheapestOfferId ?? []);
   const offers = product.offers ?? [];
-  const primaryOffer =
-    offers.find((o) => cheapestIds.has(o.offerId)) ?? offers[0];
+  const primaryOffer = pickPrimaryOffer(product);
   const costEur = primaryOffer?.price ?? product.price;
-  const qty = primaryOffer?.qty ?? product.qty ?? 0;
+  const qty = resolveCatalogQty(product);
 
   const defaultOfferId = primaryOffer?.offerId ?? offers[0]?.offerId;
   const gallery = extractKinguinProductGallery(product);

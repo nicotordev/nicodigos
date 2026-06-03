@@ -89,12 +89,14 @@ const getInitials = (name: string, email: string) => {
 export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
   return (
     <Card className="glass-card border-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-bold">Recent orders</CardTitle>
-          <CardDescription>Latest 10 orders across the store</CardDescription>
+          <CardTitle className="text-lg font-bold">Pedidos recientes</CardTitle>
+          <CardDescription>Últimos 10 pedidos de la tienda</CardDescription>
         </div>
-        <IconShoppingCart className="size-5 text-muted-foreground" />
+        <Button variant="outline" size="sm" asChild className="shrink-0">
+          <Link href="/admin/orders">Ver todos</Link>
+        </Button>
       </CardHeader>
       <CardContent>
         {orders.length === 0 ? (
