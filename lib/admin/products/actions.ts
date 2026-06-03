@@ -206,6 +206,10 @@ export async function updateProductAction(
         countryLimitations: data.countryLimitations,
         languages: data.languages,
         regionalLimitations: data.regionalLimitations || null,
+        systemRequirements:
+          data.systemRequirements.length > 0
+            ? (data.systemRequirements as Prisma.InputJsonValue)
+            : Prisma.DbNull,
       },
     });
 

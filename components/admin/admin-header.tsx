@@ -21,7 +21,12 @@ export function AdminHeader({ title, user }: AdminHeaderProps) {
         <h1 className="min-w-0 flex-1 truncate font-heading text-base font-semibold tracking-tight">
           {title}
         </h1>
-        <DashboardUserMenu user={user} compact />
+        <DashboardUserMenu
+          user={user}
+          compact
+          accountHref="/admin/settings"
+          settingsHref="/admin/settings"
+        />
       </header>
 
       <header className="hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background px-6 md:flex">
@@ -31,7 +36,11 @@ export function AdminHeader({ title, user }: AdminHeaderProps) {
           {title}
         </h1>
         <div className="ml-auto flex items-center gap-2">
-          <DashboardUserMenu user={user} />
+          <DashboardUserMenu
+            user={user}
+            accountHref="/admin/settings"
+            settingsHref="/admin/settings"
+          />
         </div>
       </header>
     </>

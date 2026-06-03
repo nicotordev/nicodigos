@@ -1,6 +1,11 @@
 "use client";
 
-import type { KinguinSystemRequirement } from "@/types/kinguin";
+import { AiTextAssistToolbar } from "@/components/admin/ai-text-assist-toolbar";
+import {
+  ProductSystemRequirementsEditor,
+  type SystemRequirementItem,
+} from "@/components/admin/product-system-requirements-editor";
+import type { AiProductContext } from "@/lib/admin/ai/types";
 import {
   Card,
   CardContent,
@@ -33,13 +38,17 @@ type ProductKinguinMetadataCardProps = {
   releaseDate: string | null;
   ageRating: string | null;
   steamAppId: string | null;
-  systemRequirements: KinguinSystemRequirement[];
+  systemRequirements: SystemRequirementItem[];
+  onSystemRequirementsChange: (items: SystemRequirementItem[]) => void;
   form: ProductMetadataFormSlice;
   onChange: <K extends keyof ProductMetadataFormSlice>(
     key: K,
     value: ProductMetadataFormSlice[K],
   ) => void;
   disabled?: boolean;
+  openAiConfigured?: boolean;
+  aiProductContext?: AiProductContext;
+  onAiError?: (message: string) => void;
 };
 
 function formatListInput(values: string[]): string {
@@ -105,10 +114,18 @@ export function ProductKinguinMetadataCard({
   ageRating,
   steamAppId,
   systemRequirements,
+  onSystemRequirementsChange,
   form,
   onChange,
   disabled = false,
+  openAiConfigured = false,
+  aiProductContext,
+  onAiError,
 }: ProductKinguinMetadataCardProps) {
+  const aiContext = aiProductContext ?? {
+    name: "Producto",
+    platform: "—",
+  };
   const displayRegion =
     regionName ??
     regionalLimitations ??
@@ -161,9 +178,20 @@ export function ProductKinguinMetadataCard({
 
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="regionalLimitations">
-              Etiqueta de región (editable)
-            </FieldLabel>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <FieldLabel htmlFor="regionalLimitations" className="mb-0">
+                Etiqueta de región (editable)
+              </FieldLabel>
+              <AiTextAssistToolbar
+                configured={openAiConfigured}
+                field="regionalLimitations"
+                value={form.regionalLimitations}
+                productContext={aiContext}
+                onApply={(text) => onChange("regionalLimitations", text)}
+                onError={onAiError}
+                disabled={disabled}
+              />
+            </div>
             <Input
               id="regionalLimitations"
               value={form.regionalLimitations}
@@ -207,9 +235,20 @@ export function ProductKinguinMetadataCard({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="activationDetails">
-              Instrucciones de activación
-            </FieldLabel>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <FieldLabel htmlFor="activationDetails" className="mb-0">
+                Instrucciones de activación
+              </FieldLabel>
+              <AiTextAssistToolbar
+                configured={openAiConfigured}
+                field="activationDetails"
+                value={form.activationDetails}
+                productContext={aiContext}
+                onApply={(text) => onChange("activationDetails", text)}
+                onError={onAiError}
+                disabled={disabled}
+              />
+            </div>
             <Textarea
               id="activationDetails"
               value={form.activationDetails}
@@ -222,26 +261,14 @@ export function ProductKinguinMetadataCard({
           </Field>
         </FieldGroup>
 
-        {systemRequirements.length > 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Requisitos del sistema</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {systemRequirements.map((req) => (
-                <div
-                  key={req.system}
-                  className="rounded-xl border border-border p-3 text-sm"
-                >
-                  <p className="mb-2 font-medium">{req.system}</p>
-                  <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                    {req.requirement.map((line, index) => (
-                      <li key={`${req.system}-${index}`}>{line}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <ProductSystemRequirementsEditor
+          items={systemRequirements}
+          onChange={onSystemRequirementsChange}
+          disabled={disabled}
+          openAiConfigured={openAiConfigured}
+          aiProductContext={aiContext}
+          onAiError={onAiError}
+        />
       </CardContent>
     </Card>
   );

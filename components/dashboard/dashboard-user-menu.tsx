@@ -25,9 +25,20 @@ export type DashboardUserMenuUser = {
 type DashboardUserMenuProps = {
   user: DashboardUserMenuUser;
   compact?: boolean;
+  /** Enlaces para panel admin (por defecto: dashboard de cliente). */
+  accountHref?: string;
+  settingsHref?: string;
 };
 
-export function DashboardUserMenu({ user, compact }: DashboardUserMenuProps) {
+const DEFAULT_ACCOUNT_HREF = "/dashboard";
+const DEFAULT_SETTINGS_HREF = "/dashboard/settings";
+
+export function DashboardUserMenu({
+  user,
+  compact,
+  accountHref = DEFAULT_ACCOUNT_HREF,
+  settingsHref = DEFAULT_SETTINGS_HREF,
+}: DashboardUserMenuProps) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const initials = getUserInitials(user.name);
@@ -76,13 +87,13 @@ export function DashboardUserMenu({ user, compact }: DashboardUserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">
+          <Link href={accountHref}>
             <IconUser className="size-4" />
             Mi cuenta
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">
+          <Link href={settingsHref}>
             <IconSettings className="size-4" />
             Configuración
           </Link>

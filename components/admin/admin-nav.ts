@@ -23,7 +23,7 @@ export const adminNavItems: AdminNavItem[] = [
     icon: IconPackage,
   },
   {
-    href: "/dashboard",
+    href: "/admin/settings",
     label: "Mi cuenta",
     icon: IconUser,
   },
@@ -33,8 +33,10 @@ export function isAdminNavActive(href: string, pathname: string): boolean {
   if (href === "/admin") {
     return pathname === "/admin";
   }
-  if (href === "/dashboard") {
-    return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  if (href === "/admin/settings") {
+    return (
+      pathname === "/admin/settings" || pathname.startsWith("/admin/settings/")
+    );
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

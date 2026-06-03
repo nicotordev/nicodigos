@@ -12,6 +12,7 @@ import { syncProductMetadataFromKinguinIfNeeded } from "@/lib/admin/products/syn
 import { syncProductVideosIfNeeded } from "@/lib/admin/products/sync-videos";
 import { syncProductClpFromSourceIfNeeded } from "@/lib/admin/products/sync-clp";
 import { getEurToClpRate } from "@/lib/currency/exchange";
+import { isOpenAIConfigured } from "@/lib/openai/env";
 import { isR2Configured } from "@/lib/r2/env";
 
 type PageProps = {
@@ -72,6 +73,7 @@ export default async function AdminProductEditPage({ params }: PageProps) {
         product={product}
         exchangeRate={fx.rate}
         r2Configured={isR2Configured()}
+        openAiConfigured={isOpenAIConfigured()}
       />
     </div>
   );

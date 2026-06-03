@@ -8,11 +8,18 @@ import {
   ProductGalleryEditor,
   type GalleryImageItem,
 } from "@/components/admin/product-gallery-editor";
+import { AiTextAssistToolbar } from "@/components/admin/ai-text-assist-toolbar";
 import {
   buildMetadataFormState,
   parseMetadataFormSlice,
   ProductKinguinMetadataCard,
 } from "@/components/admin/product-kinguin-metadata-card";
+import {
+  mapProductSystemRequirements,
+  type SystemRequirementItem,
+} from "@/components/admin/product-system-requirements-editor";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import type { AiProductContext } from "@/lib/admin/ai/types";
 import {
   mapProductVideosToTrailers,
   ProductTrailerEditor,
@@ -20,7 +27,17 @@ import {
 } from "@/components/admin/product-trailer-editor";
 import { updateProductAction } from "@/lib/admin/products/actions";
 import type { AdminProductEditData } from "@/lib/admin/products/get-product";
-import type { UpdateProductInput } from "@/lib/admin/products/schemas";
+import type {
+  SystemRequirementInput,
+  UpdateProductInput,
+} from "@/lib/admin/products/schemas";
+import {
+  htmlToPlainText,
+  looksLikeHtml,
+  normalizeDescriptionForEditor,
+  normalizeDescriptionForSave,
+  plainTextToHtml,
+} from "@/lib/html/text";
 import { formatMoney, formatSourceMoney } from "@/lib/currency/format";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +58,6 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -55,15 +71,59 @@ type ProductEditFormProps = {
   product: AdminProductEditData;
   exchangeRate: number;
   r2Configured: boolean;
+  openAiConfigured: boolean;
 };
+
+function buildAiProductContext(
+  product: AdminProductEditData,
+  form: { name: string; platform: string; isPreorder: boolean },
+  metadataForm: { regionalLimitations: string; languages: string },
+): AiProductContext {
+  const languages = metadataForm.languages
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return {
+    name: form.name.trim() || product.name,
+    platform: form.platform.trim() || product.platform,
+    originalName: product.originalName,
+    regionalLimitations:
+      metadataForm.regionalLimitations.trim() || product.regionalLimitations,
+    developers: product.developers,
+    publishers: product.publishers,
+    languages: languages.length > 0 ? languages : product.languages,
+    isPreorder: form.isPreorder,
+  };
+}
+
+function parseSystemRequirementsForSave(
+  items: SystemRequirementItem[],
+): SystemRequirementInput[] {
+  return items
+    .map(({ clientId: _id, system, requirement }) => ({
+      system: system.trim(),
+      requirement: requirement.map((line) => line.trim()).filter(Boolean),
+    }))
+    .filter((item) => item.system.length > 0 && item.requirement.length > 0);
+}
+
+function applyAiTextToDescription(text: string): string {
+  if (looksLikeHtml(text)) {
+    return text.trim();
+  }
+  return plainTextToHtml(text);
+}
 
 export function ProductEditForm({
   product,
   exchangeRate,
   r2Configured,
+  openAiConfigured,
 }: ProductEditFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [gallery, setGallery] = useState<GalleryImageItem[]>(() =>
@@ -75,15 +135,21 @@ export function ProductEditForm({
   const [metadataForm, setMetadataForm] = useState(() =>
     buildMetadataFormState(product),
   );
+  const [systemRequirements, setSystemRequirements] = useState(() =>
+    mapProductSystemRequirements(product.systemRequirements),
+  );
 
   const [form, setForm] = useState<
     Omit<
       UpdateProductInput,
-      "images" | "videos" | keyof ReturnType<typeof parseMetadataFormSlice>
+      | "images"
+      | "videos"
+      | "systemRequirements"
+      | keyof ReturnType<typeof parseMetadataFormSlice>
     >
   >({
     name: product.name,
-    description: product.description ?? "",
+    description: normalizeDescriptionForEditor(product.description),
     platform: product.platform,
     costPrice: Math.round(Number(product.costPrice)),
     sellPrice: Math.round(Number(product.sellPrice)),
@@ -99,6 +165,8 @@ export function ProductEditForm({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  const aiProductContext = buildAiProductContext(product, form, metadataForm);
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -106,9 +174,11 @@ export function ProductEditForm({
 
     const payload: UpdateProductInput = {
       ...form,
+      description: normalizeDescriptionForSave(form.description),
       ...parseMetadataFormSlice(metadataForm),
       images: gallery.map(({ clientId: _id, ...image }) => image),
       videos: trailers.map(({ clientId: _id, ...video }) => video),
+      systemRequirements: parseSystemRequirementsForSave(systemRequirements),
     };
 
     startTransition(async () => {
@@ -150,12 +220,16 @@ export function ProductEditForm({
         releaseDate={product.releaseDate}
         ageRating={product.ageRating}
         steamAppId={product.steamAppId}
-        systemRequirements={product.systemRequirements}
+        systemRequirements={systemRequirements}
+        onSystemRequirementsChange={setSystemRequirements}
         form={metadataForm}
         onChange={(key, value) =>
           setMetadataForm((prev) => ({ ...prev, [key]: value }))
         }
         disabled={isPending}
+        openAiConfigured={openAiConfigured}
+        aiProductContext={aiProductContext}
+        onAiError={setAiError}
       />
 
       <Card>
@@ -169,7 +243,20 @@ export function ProductEditForm({
         <CardContent>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Nombre en tienda</FieldLabel>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <FieldLabel htmlFor="name" className="mb-0">
+                  Nombre en tienda
+                </FieldLabel>
+                <AiTextAssistToolbar
+                  configured={openAiConfigured}
+                  field="name"
+                  value={form.name}
+                  productContext={aiProductContext}
+                  onApply={(text) => updateField("name", text)}
+                  onError={setAiError}
+                  disabled={isPending}
+                />
+              </div>
               <Input
                 id="name"
                 value={form.name}
@@ -187,13 +274,31 @@ export function ProductEditForm({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="description">Descripción</FieldLabel>
-              <Textarea
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <FieldLabel htmlFor="description" className="mb-0">
+                  Descripción
+                </FieldLabel>
+                <AiTextAssistToolbar
+                  configured={openAiConfigured}
+                  field="description"
+                  value={htmlToPlainText(form.description ?? "")}
+                  productContext={aiProductContext}
+                  onApply={(text) =>
+                    updateField("description", applyAiTextToDescription(text))
+                  }
+                  onError={setAiError}
+                  disabled={isPending}
+                />
+              </div>
+              <FieldDescription>
+                Editor rich text. La asistencia IA genera HTML simple para la
+                ficha en Chile.
+              </FieldDescription>
+              <RichTextEditor
                 id="description"
                 value={form.description ?? ""}
-                onChange={(e) => updateField("description", e.target.value)}
+                onChange={(html) => updateField("description", html)}
                 disabled={isPending}
-                rows={5}
               />
             </Field>
             <Field>
@@ -365,6 +470,13 @@ export function ProductEditForm({
             </Table>
           </CardContent>
         </Card>
+      ) : null}
+
+      {aiError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Asistencia IA</AlertTitle>
+          <AlertDescription>{aiError}</AlertDescription>
+        </Alert>
       ) : null}
 
       {error ? (

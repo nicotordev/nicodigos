@@ -44,9 +44,23 @@ export const productVideoInputSchema = z.object({
 
 const stringListSchema = z.array(z.string().trim()).default([]);
 
+export const systemRequirementInputSchema = z.object({
+  system: z.string().trim().min(1, "Indica el sistema (Windows, Mac, etc.)"),
+  requirement: z
+    .array(z.string().trim().min(1))
+    .min(1, "Añade al menos un requisito por línea"),
+});
+
+export type SystemRequirementInput = z.infer<
+  typeof systemRequirementInputSchema
+>;
+
 export const updateProductSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
-  description: z.string().trim().optional(),
+  description: z
+    .string()
+    .transform((value) => value.trim())
+    .optional(),
   platform: z.string().trim().min(1, "La plataforma es obligatoria"),
   sellPrice: z.coerce
     .number()
@@ -65,6 +79,9 @@ export const updateProductSchema = z.object({
   languages: stringListSchema,
   images: z.array(productImageInputSchema).max(24, "Máximo 24 imágenes"),
   videos: z.array(productVideoInputSchema).max(12, "Máximo 12 trailers"),
+  systemRequirements: z
+    .array(systemRequirementInputSchema)
+    .max(12, "Máximo 12 bloques de requisitos"),
 });
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
