@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { resetPassword } from "@/lib/auth-client";
-import { buildPostResetSignInUrl } from "@/lib/auth/sign-in-params";
+import { buildAuthSuccessUrl } from "@/lib/auth/status-pages";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,7 +78,12 @@ export function ResetPasswordForm({
       return;
     }
 
-    router.push(buildPostResetSignInUrl(callbackURL));
+    router.push(
+      buildAuthSuccessUrl({
+        code: "password_reset",
+        callbackURL,
+      }),
+    );
     router.refresh();
   }
 

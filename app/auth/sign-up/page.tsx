@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { SignUpHero } from "@/components/auth/sign-up-hero";
 import Logo from "@/components/logo";
@@ -14,6 +15,7 @@ import {
   normalizePageSearchParams,
   resolveCallbackURL,
 } from "@/lib/auth/sign-in-params";
+import { getLegacyAuthStatusRedirect } from "@/lib/auth/status-pages";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
@@ -25,6 +27,9 @@ export default async function SignUpPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = normalizePageSearchParams(await searchParams);
+  const legacyRedirect = getLegacyAuthStatusRedirect(params, "sign-up");
+  if (legacyRedirect) redirect(legacyRedirect);
+
   const callbackURL = resolveCallbackURL(params);
   const signInHref = `/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`;
 

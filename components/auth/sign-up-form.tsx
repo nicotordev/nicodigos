@@ -8,12 +8,10 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { IconMail } from "@tabler/icons-react";
 import {
   AuthMethodTabs,
   type AuthMethod,
 } from "@/components/auth/auth-method-tabs";
-import { MagicLinkSent } from "@/components/auth/magic-link-sent";
 import {
   AuthCaptchaProvider,
   AuthTurnstileField,
@@ -22,12 +20,15 @@ import {
 import { signIn, signUp } from "@/lib/auth-client";
 import { captchaFetchOptions } from "@/lib/turnstile";
 import {
-  buildPostVerificationSignInUrl,
-  getAuthErrorFromSearchParams,
   getSearchParam,
   type SignInSearchParams,
 } from "@/lib/auth/sign-in-params";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  buildAuthErrorUrl,
+  buildAuthSuccessUrl,
+  buildPostVerificationSignInUrl,
+} from "@/lib/auth/status-pages";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -77,11 +78,6 @@ export interface SignUpFormProps {
 function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
   const router = useRouter();
   const [method, setMethod] = React.useState<AuthMethod>("magic-link");
-  const [magicLinkSentEmail, setMagicLinkSentEmail] = React.useState<
-    string | null
-  >(null);
-  const [pendingVerificationEmail, setPendingVerificationEmail] =
-    React.useState<string | null>(null);
   const {
     token: captchaToken,
     reset: resetCaptcha,
@@ -90,8 +86,7 @@ function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
   const [submissionError, setSubmissionError] = React.useState<string | null>(
     null,
   );
-  const urlError = getAuthErrorFromSearchParams(searchParams);
-  const authError = submissionError ?? urlError;
+  const authError = submissionError;
 
   const magicLinkForm = useForm<MagicLinkSignUpValues>({
     resolver: zodResolver(magicLinkSignUpSchema),
@@ -114,8 +109,14 @@ function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
   const isSubmitting =
     magicLinkForm.formState.isSubmitting || passwordForm.formState.isSubmitting;
   const signInHref = `/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`;
-  const signUpErrorCallbackURL = `/auth/sign-up?callbackUrl=${encodeURIComponent(callbackURL)}`;
-  const signInErrorCallbackURL = `/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`;
+  const signUpErrorCallbackURL = buildAuthErrorUrl({
+    callbackURL,
+    from: "sign-up",
+  });
+  const signInErrorCallbackURL = buildAuthErrorUrl({
+    callbackURL,
+    from: "sign-in",
+  });
 
   async function onMagicLinkSubmit(values: MagicLinkSignUpValues) {
     setSubmissionError(null);
@@ -137,7 +138,14 @@ function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
       return;
     }
 
-    setMagicLinkSentEmail(values.email);
+    router.push(
+      buildAuthSuccessUrl({
+        code: "magic_link_sign_up",
+        callbackURL,
+        email: values.email,
+        from: "sign-up",
+      }),
+    );
   }
 
   async function onPasswordSubmit(values: PasswordSignUpValues) {
@@ -160,7 +168,14 @@ function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
     }
 
     if (data?.user && !data.user.emailVerified) {
-      setPendingVerificationEmail(values.email);
+      router.push(
+        buildAuthSuccessUrl({
+          code: "signup_verification_sent",
+          callbackURL,
+          email: values.email,
+          from: "sign-up",
+        }),
+      );
       return;
     }
 
@@ -198,64 +213,7 @@ function SignUpFormInner({ callbackURL, searchParams }: SignUpFormProps) {
 
     setMethod(next);
     setSubmissionError(null);
-    setMagicLinkSentEmail(null);
     resetCaptcha();
-  }
-
-  if (magicLinkSentEmail) {
-    return (
-      <MagicLinkSent
-        email={magicLinkSentEmail}
-        description="Enviamos un enlace para activar tu cuenta a"
-        backHref={signUpErrorCallbackURL}
-        backLabel="Volver al registro"
-      />
-    );
-  }
-
-  if (pendingVerificationEmail) {
-    const resendHref = `/auth/resend-verification?${new URLSearchParams({
-      email: pendingVerificationEmail,
-      callbackUrl: callbackURL,
-    }).toString()}`;
-
-    return (
-      <div className="mt-4 space-y-6">
-        <Alert className="border-primary/25 bg-primary/5">
-          <IconMail className="size-4 text-primary" aria-hidden />
-          <AlertTitle>Confirma tu correo</AlertTitle>
-          <AlertDescription>
-            Enviamos un enlace de verificación a{" "}
-            <span className="font-medium text-foreground">
-              {pendingVerificationEmail}
-            </span>
-            . Ábrelo para activar tu cuenta y poder iniciar sesión con
-            contraseña.
-          </AlertDescription>
-        </Alert>
-
-        <p className="text-sm text-muted-foreground">
-          ¿No llegó el correo?{" "}
-          <Link
-            href={resendHref}
-            className="font-semibold text-primary hover:text-primary/80"
-          >
-            Reenviar verificación
-          </Link>
-          {" · "}
-          <Link
-            href={signInHref}
-            className="font-semibold text-primary hover:text-primary/80"
-          >
-            Iniciar sesión
-          </Link>
-        </p>
-
-        <Button variant="outline" className="w-full" asChild>
-          <Link href={signInHref}>Ir a iniciar sesión</Link>
-        </Button>
-      </div>
-    );
   }
 
   return (

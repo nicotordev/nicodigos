@@ -49,53 +49,6 @@ export function getAuthErrorFromSearchParams(
   );
 }
 
-export type AuthStatusNotice = {
-  type: "success" | "error";
-  message: string;
-};
-
-export function getAuthStatusFromSearchParams(
-  searchParams: SignInSearchParams,
-): AuthStatusNotice | null {
-  if (getSearchParam(searchParams, "verified") === "1") {
-    return {
-      type: "success",
-      message: "Tu correo fue verificado. Ya puedes iniciar sesión.",
-    };
-  }
-
-  if (getSearchParam(searchParams, "reset") === "success") {
-    return {
-      type: "success",
-      message:
-        "Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.",
-    };
-  }
-
-  const error = getAuthErrorFromSearchParams(searchParams);
-  if (error && getSearchParam(searchParams, "error")) {
-    return { type: "error", message: error };
-  }
-
-  return null;
-}
-
-export function buildPostVerificationSignInUrl(destination: string): string {
-  const params = new URLSearchParams({
-    verified: "1",
-    callbackUrl: destination,
-  });
-  return `/auth/sign-in?${params.toString()}`;
-}
-
-export function buildPostResetSignInUrl(destination: string): string {
-  const params = new URLSearchParams({
-    reset: "success",
-    callbackUrl: destination,
-  });
-  return `/auth/sign-in?${params.toString()}`;
-}
-
 const DEFAULT_CALLBACK_URL = "/dashboard";
 
 export function resolveCallbackURL(searchParams: SignInSearchParams): string {

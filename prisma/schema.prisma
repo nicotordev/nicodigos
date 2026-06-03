@@ -18,21 +18,138 @@ enum Role {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  role          Role      @default(USER)
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
-  cart          Cart?
-  orders        Order[]
+  id             String              @id
+  name           String
+  email          String
+  emailVerified  Boolean
+  image          String?
+  role           Role                @default(USER)
+  createdAt      DateTime
+  updatedAt      DateTime
+  sessions       Session[]
+  accounts       Account[]
+  cart           Cart?
+  orders         Order[]
+  profile        UserProfile?
+  identification UserIdentification?
+  addresses      UserAddress[]
+  preferences    UserPreferences?
 
   @@unique([email])
   @@map("user")
+}
+
+// --- User settings ---
+
+enum IdentificationType {
+  RUT
+  DNI
+  PASSPORT
+  TAX_ID
+}
+
+enum AccountHolderType {
+  PERSON
+  COMPANY
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+}
+
+enum ThemePreference {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum ContentDensity {
+  COMFORTABLE
+  COMPACT
+}
+
+enum EmailFormat {
+  HTML
+  PLAIN
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone     String   @default("")
+  language  String   @default("es")
+  timezone  String   @default("America/Santiago")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_profile")
+}
+
+model UserIdentification {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identificationType   IdentificationType @default(RUT)
+  identificationNumber String             @default("")
+  country              String             @default("CL")
+  holderType           AccountHolderType  @default(PERSON)
+  companyName          String             @default("")
+  companyTaxId         String             @default("")
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@map("user_identification")
+}
+
+model UserAddress {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       AddressType
+  label      String
+  country    String
+  region     String      @default("")
+  city       String      @default("")
+  commune    String      @default("")
+  street     String      @default("")
+  unit       String      @default("")
+  postalCode String      @default("")
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([userId])
+  @@map("user_address")
+}
+
+model UserPreferences {
+  id                   String          @id @default(cuid())
+  userId               String          @unique
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifyEmail          Boolean         @default(true)
+  notifyPush           Boolean         @default(true)
+  notifySmsWhatsApp    Boolean         @default(false)
+  notifyProductUpdates Boolean         @default(true)
+  notifyOrderUpdates   Boolean         @default(true)
+  notifySecurityAlerts Boolean         @default(true)
+  notifyMarketing      Boolean         @default(false)
+  notifyNewsletter     Boolean         @default(false)
+  notifyReminders      Boolean         @default(true)
+  loginAlerts          Boolean         @default(true)
+  twoFactorEnabled     Boolean         @default(false)
+  theme                ThemePreference @default(SYSTEM)
+  language             String          @default("es")
+  currency             String          @default("EUR")
+  defaultCountry       String          @default("CL")
+  contentDensity       ContentDensity  @default(COMFORTABLE)
+  emailFormat          EmailFormat     @default(HTML)
+  reducedMotion        Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@map("user_preferences")
 }
 
 model Session {

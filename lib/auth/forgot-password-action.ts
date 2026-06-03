@@ -9,22 +9,18 @@ import {
   resolveCallbackURL,
   type SignInSearchParams,
 } from "@/lib/auth/sign-in-params";
-import { isTurnstileEnabled, mergeHeadersWithCaptcha } from "@/lib/turnstile";
+import {
+  buildAuthErrorUrl,
+  buildAuthSuccessUrl,
+} from "@/lib/auth/status-pages";
+import {
+  isTurnstileServerConfigured,
+  mergeHeadersWithCaptcha,
+} from "@/lib/turnstile";
 
 const emailSchema = z.object({
   email: z.email("Introduce un correo electrónico válido"),
 });
-
-function buildForgotPasswordPath(
-  searchParams: SignInSearchParams,
-  extra?: SignInSearchParams,
-): string {
-  const merged = { ...searchParams, ...extra };
-  const query = new URLSearchParams(merged).toString();
-  return query.length > 0
-    ? `/auth/forgot-password?${query}`
-    : "/auth/forgot-password";
-}
 
 export async function requestForgotPassword(formData: FormData) {
   const rawSearchParams = formData.get("searchParams");
@@ -43,16 +39,17 @@ export async function requestForgotPassword(formData: FormData) {
   }
 
   const callbackURL = resolveCallbackURL(searchParams);
-  const baseParams = { ...searchParams, callbackUrl: callbackURL };
   const resetPasswordPath = `/auth/reset-password?callbackUrl=${encodeURIComponent(callbackURL)}`;
   const email = String(formData.get("email") ?? "").trim();
   const captchaToken =
     String(formData.get("captchaToken") ?? "").trim() || null;
 
-  if (isTurnstileEnabled() && !captchaToken) {
+  if (isTurnstileServerConfigured() && !captchaToken) {
     redirect(
-      buildForgotPasswordPath(baseParams, {
-        error: "Completa la verificación de seguridad antes de continuar.",
+      buildAuthErrorUrl({
+        callbackURL,
+        from: "forgot-password",
+        message: "Completa la verificación de seguridad antes de continuar.",
         email,
       }),
     );
@@ -61,8 +58,10 @@ export async function requestForgotPassword(formData: FormData) {
   const parsed = emailSchema.safeParse({ email });
   if (!parsed.success) {
     redirect(
-      buildForgotPasswordPath(baseParams, {
-        error: parsed.error.issues[0]?.message ?? "Correo inválido",
+      buildAuthErrorUrl({
+        callbackURL,
+        from: "forgot-password",
+        message: parsed.error.issues[0]?.message ?? "Correo inválido",
         email,
       }),
     );
@@ -78,8 +77,10 @@ export async function requestForgotPassword(formData: FormData) {
     });
   } catch {
     redirect(
-      buildForgotPasswordPath(baseParams, {
-        error:
+      buildAuthErrorUrl({
+        callbackURL,
+        from: "forgot-password",
+        message:
           "No pudimos enviar el correo. Inténtalo de nuevo en unos minutos.",
         email: parsed.data.email,
       }),
@@ -87,9 +88,11 @@ export async function requestForgotPassword(formData: FormData) {
   }
 
   redirect(
-    buildForgotPasswordPath(baseParams, {
-      status: "sent",
+    buildAuthSuccessUrl({
+      code: "forgot_password_sent",
+      callbackURL,
       email: parsed.data.email,
+      from: "forgot-password",
     }),
   );
 }

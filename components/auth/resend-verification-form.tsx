@@ -5,7 +5,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { IconMail } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import {
   AuthCaptchaProvider,
   AuthTurnstileField,
@@ -13,8 +13,11 @@ import {
 } from "@/components/auth/auth-turnstile";
 import { sendVerificationEmail } from "@/lib/auth-client";
 import { captchaFetchOptions } from "@/lib/turnstile";
-import { buildPostVerificationSignInUrl } from "@/lib/auth/sign-in-params";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  buildAuthSuccessUrl,
+  buildPostVerificationSignInUrl,
+} from "@/lib/auth/status-pages";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -43,6 +46,7 @@ function ResendVerificationFormInner({
   defaultEmail = "",
   signInHref,
 }: ResendVerificationFormProps) {
+  const router = useRouter();
   const {
     token: captchaToken,
     reset: resetCaptcha,
@@ -51,8 +55,6 @@ function ResendVerificationFormInner({
   const [submissionError, setSubmissionError] = React.useState<string | null>(
     null,
   );
-  const [isSent, setIsSent] = React.useState(false);
-
   const form = useForm<ResendValues>({
     resolver: zodResolver(resendSchema),
     defaultValues: { email: defaultEmail },
@@ -78,24 +80,13 @@ function ResendVerificationFormInner({
       return;
     }
 
-    setIsSent(true);
-  }
-
-  if (isSent) {
-    return (
-      <div className="mt-4 space-y-6">
-        <Alert className="border-primary/25 bg-primary/5">
-          <IconMail className="size-4 text-primary" aria-hidden />
-          <AlertTitle>Correo enviado</AlertTitle>
-          <AlertDescription>
-            Si existe una cuenta pendiente de verificación con ese correo,
-            recibirás un nuevo enlace en breve.
-          </AlertDescription>
-        </Alert>
-        <Button variant="outline" className="w-full" asChild>
-          <Link href={signInHref}>Volver a iniciar sesión</Link>
-        </Button>
-      </div>
+    router.push(
+      buildAuthSuccessUrl({
+        code: "verification_resent",
+        callbackURL,
+        email: values.email,
+        from: "resend-verification",
+      }),
     );
   }
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { ForgotPasswordHero } from "@/components/auth/forgot-password-hero";
 import Logo from "@/components/logo";
@@ -11,10 +12,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  getSearchParam,
   normalizePageSearchParams,
   resolveCallbackURL,
 } from "@/lib/auth/sign-in-params";
+import { getLegacyAuthStatusRedirect } from "@/lib/auth/status-pages";
 
 export const metadata: Metadata = {
   title: "Recuperar contraseña",
@@ -26,8 +27,10 @@ export default async function ForgotPasswordPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = normalizePageSearchParams(await searchParams);
+  const legacyRedirect = getLegacyAuthStatusRedirect(params, "forgot-password");
+  if (legacyRedirect) redirect(legacyRedirect);
+
   const callbackURL = resolveCallbackURL(params);
-  const isSent = getSearchParam(params, "status") === "sent";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -37,26 +40,24 @@ export default async function ForgotPasswordPage({
             <CardHeader className="flex flex-col items-center text-center space-y-2 pb-2">
               <Logo href="/" size="lg" priority className="mb-2" />
               <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-                {isSent ? "Correo enviado" : "¿Olvidaste tu contraseña?"}
+                ¿Olvidaste tu contraseña?
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                {isSent ? (
-                  "Sigue las instrucciones del mensaje para crear una contraseña nueva."
-                ) : (
-                  <>
-                    Introduce el correo de tu cuenta y te enviaremos un enlace para restablecerla.{" "}
-                    <Link
-                      href={`/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`}
-                      className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Volver a iniciar sesión
-                    </Link>
-                  </>
-                )}
+                Introduce el correo de tu cuenta y te enviaremos un enlace para
+                restablecerla.{" "}
+                <Link
+                  href={`/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`}
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                  Volver a iniciar sesión
+                </Link>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ForgotPasswordForm callbackURL={callbackURL} searchParams={params} />
+              <ForgotPasswordForm
+                callbackURL={callbackURL}
+                searchParams={params}
+              />
             </CardContent>
           </Card>
         </div>

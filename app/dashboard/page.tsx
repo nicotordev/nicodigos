@@ -1,42 +1,43 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-
-export const metadata: Metadata = {
-  title: "Mi cuenta",
-};
+import { AccountOverview } from "@/components/dashboard/account-overview";
+import { DashboardActivityTabs } from "@/components/dashboard/dashboard-activity-tabs";
+import { DashboardStats } from "@/components/dashboard/dashboard-stats";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { requireUser } from "@/lib/dashboard/auth";
+import { getUserDashboardData } from "@/lib/dashboard/queries";
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) {
-    redirect("/auth/sign-in?callbackUrl=/dashboard");
-  }
+  const session = await requireUser();
+  const data = await getUserDashboardData(session.user.id);
+  const isAdmin = session.user.role === "ADMIN";
+  const memberSince = data.memberSince;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col justify-center gap-8 px-6 py-16">
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Mi cuenta</p>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Hola, {session.user.name ?? "usuario"}
-        </h1>
-        <p className="text-muted-foreground">{session.user.email}</p>
-      </div>
+    <div className="mx-auto w-full max-w-7xl space-y-6 md:space-y-8">
+      <AccountOverview
+        name={session.user.name}
+        emailVerified={session.user.emailVerified}
+        memberSince={memberSince}
+      />
 
-      <div className="flex flex-wrap gap-3">
-        <Button asChild>
-          <Link href="/">Ir al inicio</Link>
-        </Button>
-        {session.user.role === "ADMIN" ? (
-          <Button variant="outline" asChild>
-            <Link href="/admin">Panel admin</Link>
-          </Button>
-        ) : null}
+      <DashboardStats data={data} />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <DashboardActivityTabs
+            orders={data.recentOrders}
+            profile={{
+              name: session.user.name,
+              email: session.user.email,
+              image: session.user.image,
+              emailVerified: session.user.emailVerified,
+              role: session.user.role,
+              memberSince,
+            }}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <QuickActions isAdmin={isAdmin} />
+        </div>
       </div>
     </div>
   );

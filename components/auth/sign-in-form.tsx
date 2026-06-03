@@ -12,7 +12,6 @@ import {
   AuthMethodTabs,
   type AuthMethod,
 } from "@/components/auth/auth-method-tabs";
-import { MagicLinkSent } from "@/components/auth/magic-link-sent";
 import {
   AuthCaptchaProvider,
   AuthTurnstileField,
@@ -21,11 +20,13 @@ import {
 import { signIn } from "@/lib/auth-client";
 import { captchaFetchOptions } from "@/lib/turnstile";
 import {
-  getAuthErrorFromSearchParams,
-  getAuthStatusFromSearchParams,
   getSearchParam,
   type SignInSearchParams,
 } from "@/lib/auth/sign-in-params";
+import {
+  buildAuthErrorUrl,
+  buildAuthSuccessUrl,
+} from "@/lib/auth/status-pages";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,9 +62,6 @@ export interface SignInFormProps {
 function SignInFormInner({ callbackURL, searchParams }: SignInFormProps) {
   const router = useRouter();
   const [method, setMethod] = React.useState<AuthMethod>("magic-link");
-  const [magicLinkSentEmail, setMagicLinkSentEmail] = React.useState<
-    string | null
-  >(null);
   const {
     token: captchaToken,
     reset: resetCaptcha,
@@ -72,12 +70,7 @@ function SignInFormInner({ callbackURL, searchParams }: SignInFormProps) {
   const [submissionError, setSubmissionError] = React.useState<string | null>(
     null,
   );
-  const statusNotice = getAuthStatusFromSearchParams(searchParams);
-  const urlError =
-    statusNotice?.type === "error"
-      ? statusNotice.message
-      : getAuthErrorFromSearchParams(searchParams);
-  const authError = submissionError ?? urlError;
+  const authError = submissionError;
 
   const magicLinkForm = useForm<MagicLinkValues>({
     resolver: zodResolver(magicLinkSchema),
@@ -98,7 +91,10 @@ function SignInFormInner({ callbackURL, searchParams }: SignInFormProps) {
   const isSubmitting =
     magicLinkForm.formState.isSubmitting || passwordForm.formState.isSubmitting;
   const forgotPasswordHref = `/auth/forgot-password?callbackUrl=${encodeURIComponent(callbackURL)}`;
-  const signInErrorCallbackURL = `/auth/sign-in?callbackUrl=${encodeURIComponent(callbackURL)}`;
+  const signInErrorCallbackURL = buildAuthErrorUrl({
+    callbackURL,
+    from: "sign-in",
+  });
 
   async function onMagicLinkSubmit(values: MagicLinkValues) {
     setSubmissionError(null);
@@ -118,7 +114,14 @@ function SignInFormInner({ callbackURL, searchParams }: SignInFormProps) {
       return;
     }
 
-    setMagicLinkSentEmail(values.email);
+    router.push(
+      buildAuthSuccessUrl({
+        code: "magic_link_sign_in",
+        callbackURL,
+        email: values.email,
+        from: "sign-in",
+      }),
+    );
   }
 
   async function onPasswordSubmit(values: PasswordSignInValues) {
@@ -171,29 +174,11 @@ function SignInFormInner({ callbackURL, searchParams }: SignInFormProps) {
 
     setMethod(next);
     setSubmissionError(null);
-    setMagicLinkSentEmail(null);
     resetCaptcha();
-  }
-
-  if (magicLinkSentEmail) {
-    return (
-      <MagicLinkSent
-        email={magicLinkSentEmail}
-        description="Enviamos un enlace de acceso a"
-        backHref={signInErrorCallbackURL}
-        backLabel="Usar otro correo"
-      />
-    );
   }
 
   return (
     <div className="mt-4">
-      {statusNotice?.type === "success" ? (
-        <Alert className="mb-6 border-primary/25 bg-primary/5">
-          <AlertDescription>{statusNotice.message}</AlertDescription>
-        </Alert>
-      ) : null}
-
       {authError ? (
         <Alert variant="destructive" className="mb-6">
           <AlertDescription>{authError}</AlertDescription>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { SignInHero } from "@/components/auth/sign-in-hero";
 import Logo from "@/components/logo";
@@ -14,6 +15,7 @@ import {
   normalizePageSearchParams,
   resolveCallbackURL,
 } from "@/lib/auth/sign-in-params";
+import { getLegacyAuthStatusRedirect } from "@/lib/auth/status-pages";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
@@ -25,6 +27,9 @@ export default async function SignInPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = normalizePageSearchParams(await searchParams);
+  const legacyRedirect = getLegacyAuthStatusRedirect(params, "sign-in");
+  if (legacyRedirect) redirect(legacyRedirect);
+
   const callbackURL = resolveCallbackURL(params);
   const signUpHref = `/auth/sign-up?callbackUrl=${encodeURIComponent(callbackURL)}`;
 
@@ -39,7 +44,8 @@ export default async function SignInPage({
                 Ingresa a tu biblioteca
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Accede para ver tus keys compradas, activar licencias y descubrir ofertas.{" "}
+                Accede para ver tus keys compradas, activar licencias y
+                descubrir ofertas.{" "}
                 <span className="block mt-2 text-xs">
                   ¿Eres nuevo en Nicodigos?{" "}
                   <Link
