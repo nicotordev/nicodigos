@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -11,6 +9,8 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// --- Auth (better-auth) ---
 
 model User {
   id            String    @id
@@ -22,6 +22,8 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  cart          Cart?
+  orders        Order[]
 
   @@unique([email])
   @@map("user")
@@ -70,4 +72,193 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+// --- E-commerce catalog ---
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([sortOrder])
+  @@map("category")
+}
+
+model Product {
+  id                  String         @id @default(cuid())
+  kinguinId           Int            @unique
+  kinguinProductId    String         @unique
+  slug                String         @unique
+  name                String
+  originalName        String?
+  description         String?        @db.Text
+  platform            String
+  genres              String[]
+  coverImageUrl       String?
+  costPrice           Decimal        @db.Decimal(10, 2)
+  sellPrice           Decimal        @db.Decimal(10, 2)
+  qty                 Int            @default(0)
+  isActive            Boolean        @default(true)
+  isPreorder          Boolean        @default(false)
+  regionalLimitations String?
+  regionId            Int?
+  steamAppId          String?
+  kinguinSyncedAt     DateTime?
+  categoryId          String?
+  category            Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  offers              ProductOffer[]
+  cartItems           CartItem[]
+  orderItems          OrderItem[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([platform])
+  @@index([sellPrice])
+  @@map("product")
+}
+
+model ProductOffer {
+  id             String      @id @default(cuid())
+  productId      String
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kinguinOfferId String      @unique
+  name           String
+  costPrice      Decimal     @db.Decimal(10, 2)
+  sellPrice      Decimal     @db.Decimal(10, 2)
+  qty            Int         @default(0)
+  textQty        Int         @default(0)
+  merchantName   String?
+  isPreorder     Boolean     @default(false)
+  releaseDate    String?
+  isDefault      Boolean     @default(false)
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([productId])
+  @@index([isDefault])
+  @@map("product_offer")
+}
+
+// --- Cart ---
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String       @id @default(cuid())
+  cartId    String
+  cart      Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offerId   String
+  offer     ProductOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  quantity  Int          @default(1)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([cartId, offerId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_item")
+}
+
+// --- Orders ---
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            OrderStatus @default(PENDING)
+  currency          String      @default("EUR")
+  subtotal          Decimal     @db.Decimal(10, 2)
+  total             Decimal     @db.Decimal(10, 2)
+  kinguinOrderId    String?     @unique
+  kinguinStatus     String?
+  isPreorder        Boolean     @default(false)
+  preorderReleaseAt DateTime?
+  items             OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("order")
+}
+
+model OrderItem {
+  id               String        @id @default(cuid())
+  orderId          String
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId        String?
+  product          Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  offerId          String?
+  offer            ProductOffer? @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  kinguinId        Int
+  kinguinProductId String
+  kinguinOfferId   String
+  name             String
+  quantity         Int
+  unitCostPrice    Decimal       @db.Decimal(10, 2)
+  unitSellPrice    Decimal       @db.Decimal(10, 2)
+  lineTotal        Decimal       @db.Decimal(10, 2)
+  keyType          String?
+  keys             OrderKey[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_item")
+}
+
+model OrderKey {
+  id           String         @id @default(cuid())
+  orderItemId  String
+  orderItem    OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  kinguinKeyId String         @unique
+  serial       String         @db.Text
+  contentType  String
+  status       OrderKeyStatus @default(PENDING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([orderItemId])
+  @@index([status])
+  @@map("order_key")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELED
+  REFUNDED
+}
+
+enum OrderKeyStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  RETURNED
+  REFUNDED
+  CANCELED
 }
