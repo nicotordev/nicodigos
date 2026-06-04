@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { IconPackage, IconSearch } from "@tabler/icons-react";
 import {
   importKinguinProductAction,
@@ -62,6 +64,7 @@ export function CreateProductFromKinguinForm({
   const [translateWithAi, setTranslateWithAi] = useState(openAiConfigured);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [hideAlreadyImported, setHideAlreadyImported] = useState(false);
+  const [importedProductId, setImportedProductId] = useState<string | null>(null);
   const [bulkImportProgress, setBulkImportProgress] = useState<{
     current: number;
     total: number;
@@ -76,6 +79,7 @@ export function CreateProductFromKinguinForm({
     setSuccess(null);
     setSelectedIds([]);
     setBulkImportProgress(null);
+    setImportedProductId(null);
 
     startSearch(async () => {
       const result = await searchKinguinProductsAction(query);
@@ -96,21 +100,46 @@ export function CreateProductFromKinguinForm({
   function handleImport(productId: string) {
     setError(null);
     setSuccess(null);
+    setImportedProductId(null);
     setImportingId(productId);
 
+    const toastId = `import-${productId}`;
+    toast.loading("Importando producto...", { id: toastId });
+
     startImport(async () => {
-      const result = await importKinguinProductAction(productId, {
-        translateWithAi,
-      });
+      try {
+        const result = await importKinguinProductAction(productId, {
+          translateWithAi,
+        });
 
-      if (!result.success) {
-        setError(result.error);
+        if (!result.success) {
+          setError(result.error);
+          toast.error(`Error al importar: ${result.error}`, { id: toastId });
+          setImportingId(null);
+          return;
+        }
+
+        setSuccess("¡Producto importado con éxito como borrador!");
+        setImportedProductId(result.data.productId);
+        toast.success("¡Producto importado con éxito!", { id: toastId });
+
+        setResults((prev) =>
+          prev.map((item) => {
+            if (item.productId === productId) {
+              return { ...item, alreadyImported: true };
+            }
+            return item;
+          })
+        );
+
         setImportingId(null);
-        return;
+        router.refresh();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        toast.error(`Error al importar: ${msg}`, { id: toastId });
+        setImportingId(null);
       }
-
-      router.push(`/admin/products/${result.data.productId}/edit`);
-      router.refresh();
     });
   }
 
@@ -137,7 +166,11 @@ export function CreateProductFromKinguinForm({
     if (selectedIds.length === 0) return;
     setError(null);
     setSuccess(null);
+    setImportedProductId(null);
     setIsBulkImporting(true);
+
+    const toastId = "bulk-import";
+    toast.loading(`Iniciando importación masiva (0 de ${selectedIds.length})...`, { id: toastId });
 
     const errors: { id: string; name: string; error: string }[] = [];
     let successCount = 0;
@@ -155,6 +188,8 @@ export function CreateProductFromKinguinForm({
         successCount,
         errors: [...errors],
       });
+
+      toast.loading(`Importando ${i + 1} de ${total}: ${name}...`, { id: toastId });
 
       try {
         const result = await importKinguinProductAction(productId, {
@@ -188,10 +223,12 @@ export function CreateProductFromKinguinForm({
         `Se importaron ${successCount} productos con éxito. ${errors.length} fallaron:\n` +
           errors.map((e) => `- ${e.name}: ${e.error}`).join("\n")
       );
+      toast.error(`Importación masiva completada: ${successCount} éxito, ${errors.length} fallaron.`, { id: toastId });
     } else {
       setSuccess(
         `¡Todos los ${successCount} productos fueron importados con éxito!`
       );
+      toast.success(`¡Todos los ${successCount} productos importados con éxito!`, { id: toastId });
     }
 
     setResults((prev) =>
@@ -289,7 +326,16 @@ export function CreateProductFromKinguinForm({
       {success ? (
         <Alert>
           <AlertTitle>Listo</AlertTitle>
-          <AlertDescription>{success}</AlertDescription>
+          <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>{success}</span>
+            {importedProductId && (
+              <Button size="sm" asChild className="mt-2 sm:mt-0 shrink-0">
+                <Link href={`/admin/products/${importedProductId}/edit`}>
+                  Editar producto
+                </Link>
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       ) : null}
 
