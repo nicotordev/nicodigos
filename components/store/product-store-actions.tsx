@@ -61,23 +61,23 @@ export function ProductStoreActions({
       <Button
         type="button"
         size={compact ? "sm" : "default"}
-        className={compact ? "w-full" : undefined}
+        className={cn("font-bold rounded-xl transition-all duration-200 active:scale-[0.98]", compact ? "w-full" : undefined)}
         disabled={disabled || isPending}
         onClick={handleAddToCart}
       >
-        <FiShoppingCart aria-hidden />
-        Carrito
+        <FiShoppingCart className="size-4 shrink-0" aria-hidden />
+        {compact ? "Al carro" : "Agregar al carro"}
       </Button>
       <Button
         type="button"
         variant={saved ? "secondary" : "outline"}
         size={compact ? "sm" : "default"}
-        className={compact ? "w-full" : undefined}
+        className={cn("font-bold rounded-xl transition-all duration-200 active:scale-[0.98]", compact ? "w-full" : undefined)}
         disabled={disabled || isPending}
         onClick={handleToggleWishlist}
       >
-        <FiHeart aria-hidden className={saved ? "fill-current" : undefined} />
-        {saved ? "Guardado" : "Deseos"}
+        <FiHeart className={cn("size-4 shrink-0", saved ? "fill-current" : undefined)} aria-hidden />
+        {saved ? "Guardado" : "Guardar"}
       </Button>
     </div>
   );
