@@ -7,7 +7,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getPlatformIconConfig } from "@/lib/store/platform-icons";
-import { platformBadgeClass } from "@/lib/store/platform-styles";
+import {
+  platformBadgeClass,
+  platformIconAccentClass,
+} from "@/lib/store/platform-styles";
 import { cn } from "@/lib/utils";
 
 type PlatformBadgeProps = {
@@ -15,6 +18,8 @@ type PlatformBadgeProps = {
   className?: string;
   /** Muestra el nombre junto al icono (p. ej. detalle de producto). */
   showLabel?: boolean;
+  /** Fondo opaco para usar sobre portadas de producto. */
+  overlay?: boolean;
   size?: "sm" | "md";
 };
 
@@ -33,6 +38,7 @@ export function PlatformBadge({
   platform,
   className,
   showLabel = false,
+  overlay = false,
   size = "sm",
 }: PlatformBadgeProps) {
   const { icon: Icon, label } = getPlatformIconConfig(platform);
@@ -47,7 +53,10 @@ export function PlatformBadge({
           className={cn(
             "inline-flex w-fit cursor-default items-center justify-center gap-1.5 rounded-lg border font-bold uppercase tracking-wider",
             config.badge,
-            platformBadgeClass(platform),
+            overlay
+              ? "border-border/80 bg-background shadow-md backdrop-blur-sm dark:bg-zinc-950"
+              : platformBadgeClass(platform),
+            overlay && platformIconAccentClass(platform),
             className,
           )}
         >

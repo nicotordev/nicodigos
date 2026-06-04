@@ -1,7 +1,12 @@
 import prisma from "@/lib/prisma";
 import { seoMetadataFromRelation } from "@/lib/seo/metadata";
 import type { SeoMetadataDocument } from "@/lib/seo/metadata";
-import { CATALOG_PAGE_SIZE } from "@/lib/store/products";
+import { buildCatalogOrderBy } from "@/lib/store/catalog/queries";
+import {
+  DEFAULT_CATALOG_PAGE_SIZE,
+  type CatalogSort,
+} from "@/lib/store/catalog/types";
+import type { CategoryProductsFilters } from "@/lib/store/category/types";
 import { mapStorefrontProductCard } from "@/lib/store/home/map-product";
 import type { StorefrontProductCardsPage } from "@/lib/store/home/types";
 import { storefrontProductCardSelect } from "@/lib/store/product-card-query";
@@ -98,9 +103,12 @@ export async function getStorefrontCategoryBySlug(
 
 export async function getStorefrontCategoryProductsPage(
   categorySlug: string,
-  page = 1,
-  pageSize = CATALOG_PAGE_SIZE,
+  options: Partial<CategoryProductsFilters> = {},
 ): Promise<StorefrontProductCardsPage | null> {
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? DEFAULT_CATALOG_PAGE_SIZE;
+  const sort: CatalogSort = options.sort ?? "newest";
+
   const category = await prisma.category.findUnique({
     where: { slug: categorySlug },
     select: { id: true },
@@ -122,7 +130,7 @@ export async function getStorefrontCategoryProductsPage(
 
   const products = await prisma.product.findMany({
     where,
-    orderBy: [{ updatedAt: "desc" }],
+    orderBy: buildCatalogOrderBy(sort),
     take: pageSize,
     skip,
     select: storefrontProductCardSelect,

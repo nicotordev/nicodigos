@@ -15,6 +15,8 @@ type ProductStoreActionsProps = {
   disabled?: boolean;
   className?: string;
   compact?: boolean;
+  /** Dos botones anchos en grilla (página de producto). */
+  split?: boolean;
 };
 
 export function ProductStoreActions({
@@ -23,6 +25,7 @@ export function ProductStoreActions({
   disabled = false,
   className,
   compact = false,
+  split = false,
 }: ProductStoreActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(inWishlist);
@@ -53,15 +56,19 @@ export function ProductStoreActions({
   return (
     <div
       className={cn(
-        "flex gap-2",
-        compact ? "flex-col" : "flex-row flex-wrap",
+        split ? "grid w-full grid-cols-1 gap-4 sm:grid-cols-2" : "flex gap-2",
+        !split && (compact ? "flex-col" : "flex-row flex-wrap"),
+        split && "[&_button]:min-h-11 [&_button]:w-full",
         className,
       )}
     >
       <Button
         type="button"
         size={compact ? "sm" : "default"}
-        className={cn("font-bold rounded-xl transition-all duration-200 active:scale-[0.98]", compact ? "w-full" : undefined)}
+        className={cn(
+          "font-bold rounded-xl transition-all duration-200 active:scale-[0.98]",
+          compact ? "w-full" : undefined,
+        )}
         disabled={disabled || isPending}
         onClick={handleAddToCart}
       >
@@ -72,11 +79,17 @@ export function ProductStoreActions({
         type="button"
         variant={saved ? "secondary" : "outline"}
         size={compact ? "sm" : "default"}
-        className={cn("font-bold rounded-xl transition-all duration-200 active:scale-[0.98]", compact ? "w-full" : undefined)}
+        className={cn(
+          "font-bold rounded-xl transition-all duration-200 active:scale-[0.98]",
+          compact ? "w-full" : undefined,
+        )}
         disabled={disabled || isPending}
         onClick={handleToggleWishlist}
       >
-        <FiHeart className={cn("size-4 shrink-0", saved ? "fill-current" : undefined)} aria-hidden />
+        <FiHeart
+          className={cn("size-4 shrink-0", saved ? "fill-current" : undefined)}
+          aria-hidden
+        />
         {saved ? "Guardado" : "Guardar"}
       </Button>
     </div>

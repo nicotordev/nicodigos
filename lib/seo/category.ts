@@ -22,7 +22,7 @@ export function buildDefaultCategorySeoMetadata(
       .trim() ?? null;
   const description =
     plainDescription ||
-    `Explora ${category.name.toLowerCase()} en Nicodigos. Keys y licencias digitales con entrega inmediata.`;
+    `Keys y juegos digitales de ${category.name} en Chile. Compra en Nicodigos con entrega al tiro y precio en pesos chilenos.`;
   const imageUrl = category.bannerUrl ?? category.imageUrl;
   const path = storeRoutes.category(category.slug);
 

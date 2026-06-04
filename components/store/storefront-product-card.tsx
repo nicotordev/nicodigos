@@ -1,20 +1,16 @@
 import Link from "next/link";
-import { IconBolt, IconClock, IconCalendar } from "@tabler/icons-react";
+import { IconBolt, IconCalendar, IconClock } from "@tabler/icons-react";
 
+import { PlatformBadge } from "@/components/store/platform-badge";
 import { ProductStoreActions } from "@/components/store/product-store-actions";
 import { StoreProductCover } from "@/components/store/store-product-cover";
-import { PlatformBadge } from "@/components/store/platform-badge";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { formatMoney } from "@/lib/currency/format";
 import { storeRoutes } from "@/lib/store/navigation";
 import { cn } from "@/lib/utils";
+
+export const storefrontProductGridClassName =
+  "grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8";
 
 export type StorefrontCardProduct = {
   id: string;
@@ -48,6 +44,46 @@ type StorefrontProductCardProps = {
   className?: string;
 };
 
+function plainDescription(
+  html: string | null | undefined,
+  maxLength = 100,
+): string | null {
+  if (!html) {
+    return null;
+  }
+
+  const text = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!text) {
+    return null;
+  }
+
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+}
+
+function productMetaLine(product: StorefrontCardProduct): string | null {
+  const parts: string[] = [];
+
+  if (product.regionName) {
+    parts.push(product.regionName === "Global" ? "Global" : product.regionName);
+  } else if (product.genres && product.genres.length > 0) {
+    parts.push(...product.genres.slice(0, 2));
+  }
+
+  if (product.isPreorder) {
+    parts.push(
+      product.releaseDate ? `Preventa · ${product.releaseDate}` : "Preventa",
+    );
+  } else if (product.isOffer) {
+    parts.push("Oferta");
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 export function StorefrontProductCardView({
   product,
   className,
@@ -56,119 +92,117 @@ export function StorefrontProductCardView({
   const qty = product.qty ?? 1;
   const inStock = qty > 0 || isPreorder;
   const displayPrice = product.offer?.sellPrice ?? product.sellPrice;
+  const description = plainDescription(product.description);
+  const metaLine = productMetaLine(product);
 
   return (
-    <Card
-      size="sm"
+    <article
       className={cn(
-        "group relative flex h-full flex-col gap-0 overflow-hidden py-0 border border-border/80 bg-card rounded-2xl shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 pt-0!",
+        "group relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card transition-shadow duration-200 hover:shadow-md",
         className,
       )}
     >
       {product.isOffer && product.discountPercent ? (
         <Badge className="absolute right-3 top-3 z-20 border-0 bg-rose-500 font-extrabold text-white shadow-md text-[10px] tracking-wider uppercase">
-          -{product.discountPercent}% OFF
+          -{product.discountPercent}%
         </Badge>
       ) : null}
-      {isPreorder ? (
-        <Badge
-          variant="outline"
-          className="absolute left-3 top-3 z-20 border-violet-500/20 bg-violet-500/10 text-violet-400 font-bold text-[10px]"
-        >
-          <IconClock className="size-3" aria-hidden />
-          Preventa
-        </Badge>
-      ) : null}
-
       <Link
         href={storeRoutes.product(product.slug)}
-        className="relative block aspect-[2/1] shrink-0 overflow-hidden bg-muted/40 border-b border-border/40"
+        className="relative block overflow-hidden bg-muted"
+        tabIndex={-1}
       >
         <StoreProductCover
           src={product.coverImageUrl}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] rounded-none"
-          sizes="(max-width:640px) 100vw, 280px"
+          className="aspect-3/4 w-full rounded-none transition-opacity duration-200 group-hover:opacity-75 sm:aspect-auto sm:h-80"
+          sizes="(max-width:640px) 100vw, 360px"
         />
-        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <PlatformBadge
+          platform={product.platform}
+          overlay
+          className="absolute left-3 top-3 z-20"
+        />
+        {isPreorder ? (
+          <Badge
+            variant="outline"
+            className="absolute left-3 top-14 z-20 border-violet-500/30 bg-background text-violet-600 font-bold text-[10px] shadow-md backdrop-blur-sm dark:bg-zinc-950 dark:text-violet-400"
+          >
+            <IconClock className="size-3" aria-hidden />
+            Preventa
+          </Badge>
+        ) : null}
       </Link>
 
-      <div className="flex min-h-0 flex-1 flex-col px-3 pt-2.5 pb-2.5">
-        <CardHeader className="gap-1.5 p-0">
-          <div className="flex items-center justify-between gap-1">
-            <PlatformBadge platform={product.platform} />
-            {product.regionName ? (
-              <span className="truncate text-[9px] font-bold uppercase tracking-wide text-muted-foreground/80">
-                {product.regionName === "Global"
-                  ? "Global"
-                  : product.regionName}
-              </span>
-            ) : null}
-          </div>
+      <div className="relative z-10 flex flex-1 flex-col space-y-2 p-4">
+        <h3 className="text-sm font-medium text-foreground">
+          <Link
+            href={storeRoutes.product(product.slug)}
+            className="hover:text-primary transition-colors"
+          >
+            {product.name}
+          </Link>
+        </h3>
 
-          <CardTitle className="line-clamp-2 text-[13px] font-extrabold leading-snug group-hover:text-primary transition-colors duration-200">
-            <Link href={storeRoutes.product(product.slug)}>{product.name}</Link>
-          </CardTitle>
+        {description ? (
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+            {description}
+          </p>
+        ) : null}
 
-          {isPreorder ? (
-            product.releaseDate ? (
-              <p className="flex items-center gap-1 text-[10px] text-violet-400 font-semibold">
-                <IconCalendar className="size-3 shrink-0" aria-hidden />
-                <span className="truncate">{product.releaseDate}</span>
-              </p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground">Preventa</p>
-            )
-          ) : product.genres && product.genres.length > 0 ? (
-            <p className="line-clamp-1 text-[10px] text-muted-foreground/80">
-              {product.genres.slice(0, 2).join(" · ")}
+        <div className="flex flex-1 flex-col justify-end gap-3 pt-1">
+          {metaLine ? (
+            <p className="text-sm text-muted-foreground italic line-clamp-1">
+              {metaLine}
             </p>
           ) : null}
-        </CardHeader>
 
-        <div className="mt-auto flex flex-col gap-2 pt-2">
-          <CardContent className="p-0">
-            <div className="flex items-center justify-between gap-2 border-t border-border/40 pt-2">
-              <div className="min-w-0">
-                {product.listPrice ? (
-                  <p className="text-[10px] text-muted-foreground/75 line-through tabular-nums">
-                    {formatMoney(product.listPrice)}
-                  </p>
-                ) : null}
-                <p className="text-base font-black tabular-nums text-foreground leading-none">
-                  {formatMoney(displayPrice)}
+          <div className="flex items-end justify-between gap-2 border-t border-border/50 pt-3">
+            <div className="min-w-0">
+              {product.listPrice ? (
+                <p className="text-xs text-muted-foreground line-through tabular-nums">
+                  {formatMoney(product.listPrice)}
                 </p>
-              </div>
-              <p className="shrink-0 text-[10px] font-semibold tabular-nums">
-                {isPreorder ? (
-                  <span className="text-violet-400">Reserva</span>
-                ) : qty > 0 ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    {qty} u.
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Agotado</span>
-                )}
+              ) : null}
+              <p className="text-base font-medium tabular-nums text-foreground">
+                {formatMoney(displayPrice)}
               </p>
             </div>
-            {product.isOffer ? (
-              <p className="mt-1 flex items-center gap-0.5 text-[10px] font-bold text-rose-500">
-                <IconBolt className="size-3" aria-hidden />
-                Oferta
-              </p>
-            ) : null}
-          </CardContent>
+            <p className="shrink-0 text-xs font-medium tabular-nums">
+              {isPreorder ? (
+                <span className="text-violet-500">Reserva</span>
+              ) : qty > 0 ? (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  {qty} en stock
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Agotado</span>
+              )}
+            </p>
+          </div>
 
-          <CardFooter className="p-0">
-            <ProductStoreActions
-              productId={product.id}
-              compact
-              disabled={!inStock}
-              className="w-full flex-row gap-1.5 [&_button]:min-h-8 [&_button]:flex-1 [&_button]:px-2 [&_button]:text-xs"
-            />
-          </CardFooter>
+          {product.isOffer ? (
+            <p className="flex items-center gap-0.5 text-xs font-semibold text-rose-500">
+              <IconBolt className="size-3" aria-hidden />
+              Oferta activa
+            </p>
+          ) : null}
+
+          {isPreorder && product.releaseDate ? (
+            <p className="flex items-center gap-1 text-xs font-medium text-violet-500">
+              <IconCalendar className="size-3 shrink-0" aria-hidden />
+              <span className="truncate">{product.releaseDate}</span>
+            </p>
+          ) : null}
+
+          <ProductStoreActions
+            productId={product.id}
+            compact
+            disabled={!inStock}
+            className="relative z-10 w-full flex-row gap-2 [&_button]:min-h-9 [&_button]:flex-1 [&_button]:text-xs"
+          />
         </div>
       </div>
-    </Card>
+    </article>
   );
 }

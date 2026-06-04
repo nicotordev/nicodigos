@@ -8,7 +8,10 @@ import { IconLoader2 } from "@tabler/icons-react";
 import { CatalogFiltersBar } from "@/components/store/catalog-filters";
 import { CatalogPaginationClient } from "@/components/store/catalog-pagination-client";
 import { CatalogProductSkeleton } from "@/components/store/catalog-product-skeleton";
-import { StorefrontProductCardView } from "@/components/store/storefront-product-card";
+import {
+  StorefrontProductCardView,
+  storefrontProductGridClassName,
+} from "@/components/store/storefront-product-card";
 import {
   Empty,
   EmptyDescription,
@@ -164,7 +167,10 @@ export function CatalogExplorer({
         <div className="relative">
           <ul
             className={cn(
-              "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 transition-opacity duration-200",
+              cn(
+                storefrontProductGridClassName,
+                "transition-opacity duration-200",
+              ),
               isLoadingGrid && "opacity-50 pointer-events-none",
             )}
           >

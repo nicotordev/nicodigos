@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { storefrontProductGridClassName } from "@/components/store/storefront-product-card";
 import { cn } from "@/lib/utils";
 
 type CatalogProductSkeletonProps = {
@@ -11,26 +12,20 @@ export function CatalogProductSkeleton({
   className,
 }: CatalogProductSkeletonProps) {
   return (
-    <ul
-      className={cn(
-        "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-        className,
-      )}
-      aria-hidden
-    >
+    <ul className={cn(storefrontProductGridClassName, className)} aria-hidden>
       {Array.from({ length: count }, (_, index) => (
         <li key={index}>
-          <div className="overflow-hidden rounded-[min(var(--radius-4xl),24px)] ring-1 ring-border/40">
-            <Skeleton className="aspect-16/10 w-full rounded-none" />
-            <div className="space-y-3 p-4">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <div className="flex justify-between pt-2">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+            <Skeleton className="aspect-3/4 w-full rounded-none sm:aspect-auto sm:h-80" />
+            <div className="space-y-2 p-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+              <div className="flex justify-between border-t border-border/50 pt-3">
                 <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-12" />
+                <Skeleton className="h-4 w-16" />
               </div>
-              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-9 w-full" />
             </div>
           </div>
         </li>

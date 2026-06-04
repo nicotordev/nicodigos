@@ -43,7 +43,7 @@ function buildCatalogWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
   return where;
 }
 
-function buildCatalogOrderBy(
+export function buildCatalogOrderBy(
   sort: CatalogSort,
 ): Prisma.ProductOrderByWithRelationInput[] {
   switch (sort) {

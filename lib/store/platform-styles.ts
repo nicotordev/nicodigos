@@ -32,3 +32,29 @@ export function platformBadgeClass(platform: string): string {
   const key = normalizePlatformKey(platform);
   return platformBadgeStyles[key] ?? platformBadgeStyles.other;
 }
+
+/** Icon tint when badge sits on product cover (solid background). */
+export const platformIconAccentStyles: Record<string, string> = {
+  steam: "text-sky-600 dark:text-sky-400",
+  xbox: "text-emerald-600 dark:text-emerald-400",
+  playstation: "text-blue-600 dark:text-blue-400",
+  ps4: "text-blue-600 dark:text-blue-400",
+  ps5: "text-blue-600 dark:text-blue-400",
+  nintendo: "text-rose-600 dark:text-rose-400",
+  epic: "text-slate-700 dark:text-slate-300",
+  gog: "text-purple-600 dark:text-purple-400",
+  origin: "text-orange-600 dark:text-orange-400",
+  ubisoft: "text-sky-700 dark:text-sky-300",
+  battlenet: "text-cyan-600 dark:text-cyan-400",
+  rockstar: "text-yellow-700 dark:text-yellow-400",
+  activision: "text-neutral-700 dark:text-neutral-300",
+  ea: "text-orange-600 dark:text-orange-400",
+  android: "text-lime-600 dark:text-lime-400",
+  apple: "text-zinc-700 dark:text-zinc-300",
+  other: "text-muted-foreground",
+};
+
+export function platformIconAccentClass(platform: string): string {
+  const key = normalizePlatformKey(platform);
+  return platformIconAccentStyles[key] ?? platformIconAccentStyles.other;
+}

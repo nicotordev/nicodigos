@@ -3,7 +3,10 @@ import Link from "next/link";
 import { IconBolt } from "@tabler/icons-react";
 
 import { StorePagination } from "@/components/store/catalog-pagination";
-import { StorefrontProductCardView } from "@/components/store/storefront-product-card";
+import {
+  StorefrontProductCardView,
+  storefrontProductGridClassName,
+} from "@/components/store/storefront-product-card";
 import {
   Empty,
   EmptyDescription,
@@ -117,7 +120,7 @@ export default async function OffersPage({ searchParams }: OffersPageProps) {
           </Empty>
         ) : (
           <>
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <ul className={storefrontProductGridClassName}>
               {products.map((product) => (
                 <li key={product.id} className="h-full">
                   <StorefrontProductCardView product={product} />
