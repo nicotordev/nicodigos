@@ -15,6 +15,10 @@ function sanitizeFilters(input: CatalogFilters): CatalogFilters {
     q: input.q?.slice(0, 120).trim() ?? "",
     category: input.category?.slice(0, 80).trim() ?? "",
     platform: input.platform?.slice(0, 80).trim() ?? "",
+    genre: input.genre?.slice(0, 80).trim() ?? "",
+    tag: input.tag?.slice(0, 80).trim() ?? "",
+    minPrice: input.minPrice?.slice(0, 10).trim() ?? "",
+    maxPrice: input.maxPrice?.slice(0, 10).trim() ?? "",
     offersOnly: Boolean(input.offersOnly),
     preordersOnly: Boolean(input.preordersOnly),
     sort: CATALOG_SORT_OPTIONS.some((option) => option.value === input.sort)

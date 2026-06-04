@@ -44,6 +44,10 @@ export function parseCatalogSearchParams(
     q: raw("q")?.trim() ?? "",
     category: raw("category")?.trim() ?? "",
     platform: raw("platform")?.trim() ?? "",
+    genre: raw("genero")?.trim() ?? "",
+    tag: raw("tag")?.trim() ?? "",
+    minPrice: raw("min_precio")?.trim() ?? "",
+    maxPrice: raw("max_precio")?.trim() ?? "",
     offersOnly: raw("ofertas") === "1",
     preordersOnly: raw("preventas") === "1",
     sort: parseSort(raw("orden")),
@@ -63,6 +67,18 @@ export function catalogFiltersToQueryString(filters: CatalogFilters): string {
   }
   if (filters.platform) {
     params.set("platform", filters.platform);
+  }
+  if (filters.genre) {
+    params.set("genero", filters.genre);
+  }
+  if (filters.tag) {
+    params.set("tag", filters.tag);
+  }
+  if (filters.minPrice) {
+    params.set("min_precio", filters.minPrice);
+  }
+  if (filters.maxPrice) {
+    params.set("max_precio", filters.maxPrice);
   }
   if (filters.offersOnly) {
     params.set("ofertas", "1");

@@ -19,6 +19,10 @@ export type CatalogFilters = {
   q: string;
   category: string;
   platform: string;
+  genre: string;
+  tag: string;
+  minPrice: string;
+  maxPrice: string;
   offersOnly: boolean;
   preordersOnly: boolean;
   sort: CatalogSort;
@@ -34,6 +38,8 @@ export type CatalogFilterOptions = {
     productCount: number;
   }>;
   platforms: string[];
+  genres: string[];
+  tags: string[];
 };
 
 export type CatalogPageResult = {

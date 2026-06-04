@@ -37,7 +37,26 @@ function buildCatalogWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
   }
 
   if (filters.category) {
-    where.category = { slug: filters.category };
+    where.categories = { some: { slug: filters.category } };
+  }
+
+  if (filters.genre) {
+    where.genres = { has: filters.genre };
+  }
+
+  if (filters.tag) {
+    where.tags = { has: filters.tag };
+  }
+
+  if (filters.minPrice || filters.maxPrice) {
+    const priceFilter: { gte?: number; lte?: number } = {};
+    if (filters.minPrice) {
+      priceFilter.gte = Number(filters.minPrice);
+    }
+    if (filters.maxPrice) {
+      priceFilter.lte = Number(filters.maxPrice);
+    }
+    where.sellPrice = priceFilter;
   }
 
   return where;
@@ -59,18 +78,30 @@ export function buildCatalogOrderBy(
 }
 
 export async function getCatalogFilterOptions(): Promise<CatalogFilterOptions> {
-  const [categories, platformRows] = await Promise.all([
+  const [categories, products] = await Promise.all([
     getStorefrontCategories(),
     prisma.product.findMany({
       where: {
         isActive: true,
         OR: [{ qty: { gt: 0 } }, { isPreorder: true }],
       },
-      distinct: ["platform"],
-      select: { platform: true },
-      orderBy: { platform: "asc" },
+      select: {
+        platform: true,
+        genres: true,
+        tags: true,
+      },
     }),
   ]);
+
+  const platforms = Array.from(new Set(products.map((p) => p.platform)))
+    .filter(Boolean)
+    .sort();
+  const genres = Array.from(new Set(products.flatMap((p) => p.genres)))
+    .filter(Boolean)
+    .sort();
+  const tags = Array.from(new Set(products.flatMap((p) => p.tags)))
+    .filter(Boolean)
+    .sort();
 
   return {
     categories: categories
@@ -81,7 +112,9 @@ export async function getCatalogFilterOptions(): Promise<CatalogFilterOptions> {
         slug: category.slug,
         productCount: category.productCount,
       })),
-    platforms: platformRows.map((row) => row.platform),
+    platforms,
+    genres,
+    tags,
   };
 }
 
@@ -92,6 +125,10 @@ export async function searchCatalogProducts(
     q: filters.q ?? "",
     category: filters.category ?? "",
     platform: filters.platform ?? "",
+    genre: filters.genre ?? "",
+    tag: filters.tag ?? "",
+    minPrice: filters.minPrice ?? "",
+    maxPrice: filters.maxPrice ?? "",
     offersOnly: filters.offersOnly ?? false,
     preordersOnly: filters.preordersOnly ?? false,
     sort: filters.sort ?? "newest",
