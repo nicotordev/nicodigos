@@ -120,7 +120,11 @@ export async function getStorefrontCategoryProductsPage(
 
   const where = {
     ...activeProductWhere,
-    categoryId: category.id,
+    categories: {
+      some: {
+        id: category.id,
+      },
+    },
   };
 
   const total = await prisma.product.count({ where });
