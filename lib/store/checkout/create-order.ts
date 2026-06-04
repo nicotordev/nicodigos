@@ -99,10 +99,15 @@ export async function createOrderFromCart(
     });
   }
 
-  const totalDecimal = new Prisma.Decimal(Math.round(subtotal).toString());
-  const amount = Math.round(subtotal);
+  const subtotalRounded = Math.round(subtotal);
+  const iva = Math.round(subtotalRounded * 0.19);
+  const flowCommission = Math.round((subtotalRounded + iva) * 0.037961);
+  const total = subtotalRounded + iva + flowCommission;
 
-  if (amount <= 0) {
+  const subtotalDecimal = new Prisma.Decimal(subtotalRounded.toString());
+  const totalDecimal = new Prisma.Decimal(total.toString());
+
+  if (total <= 0) {
     return { error: "El total del pedido no es válido." };
   }
 
@@ -111,7 +116,7 @@ export async function createOrderFromCart(
       userId,
       status: "PENDING",
       currency: "CLP",
-      subtotal: totalDecimal,
+      subtotal: subtotalDecimal,
       total: totalDecimal,
       isPreorder,
       billingDocumentType: billing.documentType,
@@ -148,7 +153,7 @@ export async function createOrderFromCart(
     orderId: order.id,
     email: billing.email,
     subject,
-    amount,
+    amount: total,
     itemCount,
   };
 }

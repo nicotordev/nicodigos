@@ -44,10 +44,11 @@ import type { CheckoutPageData } from "@/lib/store/checkout/get-checkout-initial
 import { footerLegalLinks, storeRoutes } from "@/lib/store/navigation";
 import type { UserAddress } from "@/lib/settings/types";
 import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/currency/format";
 
 type CheckoutFormProps = CheckoutPageData & {
   userId: string;
-  totalLabel: string;
+  subtotal: number;
   itemCount: number;
   className?: string;
 };
@@ -100,10 +101,14 @@ export function CheckoutForm({
   userId,
   initialValues,
   savedAddresses,
-  totalLabel,
+  subtotal,
   itemCount,
   className,
 }: CheckoutFormProps) {
+  const iva = Math.round(subtotal * 0.19);
+  const flowCommission = Math.round((subtotal + iva) * 0.037961);
+  const total = subtotal + iva + flowCommission;
+
   const [values, setValues] = useState(initialValues);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -567,13 +572,41 @@ export function CheckoutForm({
             </Label>
           </div>
 
+          {/* Resumen de Pago */}
+          <div className="rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-sm animate-in fade-in-0 duration-300">
+            <h3 className="font-heading font-bold text-sm text-foreground uppercase tracking-wider">
+              Resumen de Pago
+            </h3>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal (Neto)</span>
+                <span className="font-medium text-foreground">{formatMoney(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">IVA (19%)</span>
+                <span className="font-medium text-foreground">{formatMoney(iva)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Comisión de Pago (Flow.cl)</span>
+                <span className="font-medium text-foreground">{formatMoney(flowCommission)}</span>
+              </div>
+              <div className="border-t border-border/40 my-3" />
+              <div className="flex justify-between items-baseline pt-1">
+                <span className="font-bold text-foreground text-base">Total final</span>
+                <span className="font-black text-2xl text-primary tabular-nums">
+                  {formatMoney(total)}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-border/60 bg-card p-4">
             <div>
               <p className="text-xs text-muted-foreground font-medium">
                 {itemCount} {itemCount === 1 ? "producto" : "productos"}
               </p>
               <p className="text-xl font-black text-primary tabular-nums">
-                {totalLabel}
+                {formatMoney(total)}
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
