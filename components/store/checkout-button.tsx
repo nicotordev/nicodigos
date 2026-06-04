@@ -1,10 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
-import { toast } from "sonner";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { startFlowCheckoutAction } from "@/lib/store/checkout/actions";
+import { storeRoutes } from "@/lib/store/navigation";
+import { cn } from "@/lib/utils";
 
 type CheckoutButtonProps = {
   disabled?: boolean;
@@ -17,30 +17,14 @@ export function CheckoutButton({
   className,
   onStarted,
 }: CheckoutButtonProps) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleCheckout() {
-    startTransition(async () => {
-      const result = await startFlowCheckoutAction();
-
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-
-      onStarted?.();
-      window.location.href = result.data!.redirectUrl;
-    });
-  }
-
   return (
     <Button
-      type="button"
-      className={className}
-      disabled={disabled || isPending}
-      onClick={handleCheckout}
+      asChild
+      className={cn(className)}
+      disabled={disabled}
+      onClick={onStarted}
     >
-      {isPending ? "Redirigiendo a Flow…" : "Finalizar compra"}
+      <Link href={storeRoutes.checkout}>Continuar al checkout</Link>
     </Button>
   );
 }

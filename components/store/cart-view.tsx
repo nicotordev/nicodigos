@@ -6,16 +6,10 @@ import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import { LuArrowRightLeft } from "react-icons/lu";
 import { toast } from "sonner";
 
-import { CheckoutButton } from "@/components/store/checkout-button";
 import { StoreProductCover } from "@/components/store/store-product-cover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   clearCartAction,
@@ -95,12 +89,19 @@ export function CartViewPanel({ cart }: CartViewProps) {
             <div className="absolute -top-1 -right-1 size-3 rounded-full bg-primary" />
           </div>
           <div className="space-y-2">
-            <h2 className="font-heading text-xl font-bold text-foreground">Tu carrito está vacío</h2>
+            <h2 className="font-heading text-xl font-bold text-foreground">
+              Tu carrito está vacío
+            </h2>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Explora nuestro catálogo completo de keys oficiales, tarjetas de regalo y licencias de software con activación inmediata.
+              Explora nuestro catálogo completo de keys oficiales, tarjetas de
+              regalo y licencias de software con activación inmediata.
             </p>
           </div>
-          <Button asChild size="lg" className="w-full sm:w-auto font-semibold px-6 shadow-sm">
+          <Button
+            asChild
+            size="lg"
+            className="w-full sm:w-auto font-semibold px-6 shadow-sm"
+          >
             <Link href={storeRoutes.catalog}>Explorar productos</Link>
           </Button>
         </CardContent>
@@ -114,7 +115,11 @@ export function CartViewPanel({ cart }: CartViewProps) {
         {/* Bulk Action Header */}
         <div className="flex items-center justify-between border-b border-border/10 pb-3">
           <span className="text-xs text-muted-foreground font-medium">
-            Tienes <span className="font-semibold text-foreground">{cart.items.length}</span> {cart.items.length === 1 ? "producto" : "productos"} en tu lista
+            Tienes{" "}
+            <span className="font-semibold text-foreground">
+              {cart.items.length}
+            </span>{" "}
+            {cart.items.length === 1 ? "producto" : "productos"} en tu lista
           </span>
           <Button
             type="button"
@@ -148,9 +153,19 @@ export function CartViewPanel({ cart }: CartViewProps) {
                   <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="font-semibold text-[10px] tracking-wider uppercase">{item.product.platform}</Badge>
+                        <Badge
+                          variant="secondary"
+                          className="font-semibold text-[10px] tracking-wider uppercase"
+                        >
+                          {item.product.platform}
+                        </Badge>
                         {!item.product.isActive || item.product.qty <= 0 ? (
-                          <Badge variant="destructive" className="font-semibold text-[10px] tracking-wider uppercase">Sin stock</Badge>
+                          <Badge
+                            variant="destructive"
+                            className="font-semibold text-[10px] tracking-wider uppercase"
+                          >
+                            Sin stock
+                          </Badge>
                         ) : null}
                       </div>
                       <Link
@@ -238,33 +253,48 @@ export function CartViewPanel({ cart }: CartViewProps) {
       {/* Sticky Total summary box */}
       <Card className="h-fit glass-card lg:sticky lg:top-24 overflow-hidden border border-border/80 shadow-md">
         <div className="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 px-6 py-4 border-b border-border/40">
-          <CardTitle className="font-heading text-lg font-bold">Resumen de Compra</CardTitle>
+          <CardTitle className="font-heading text-lg font-bold">
+            Resumen de Compra
+          </CardTitle>
         </div>
         <CardContent className="p-6 space-y-4 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground font-medium">Productos seleccionados</span>
+            <span className="text-muted-foreground font-medium">
+              Productos seleccionados
+            </span>
             <span className="font-bold text-foreground">{cart.itemCount}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground font-medium">Envío</span>
-            <span className="text-emerald-500 font-bold uppercase text-[10px] tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">Instantáneo</span>
+            <span className="text-emerald-500 font-bold uppercase text-[10px] tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+              Instantáneo
+            </span>
           </div>
           <Separator className="bg-border/40" />
           <div className="flex items-center justify-between text-base">
             <span className="font-bold text-foreground">Total a pagar</span>
-            <span className="font-black text-lg text-primary tabular-nums">{formatMoney(cart.subtotal)}</span>
+            <span className="font-black text-lg text-primary tabular-nums">
+              {formatMoney(cart.subtotal)}
+            </span>
           </div>
-          
+
           <div className="rounded-xl bg-muted/40 p-3.5 border border-border/30 space-y-1.5 text-xs text-muted-foreground/90 leading-relaxed">
             <div className="flex items-center gap-1.5 font-bold text-foreground">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Entrega Digital Automática
             </div>
-            Las licencias y códigos se envían de forma instantánea a tu correo y cuenta una vez verificado el pago.
+            Las licencias y códigos se envían de forma instantánea a tu correo y
+            cuenta una vez verificado el pago.
           </div>
         </CardContent>
         <CardFooter className="p-6 pt-0 flex flex-col gap-3">
-          <CheckoutButton className="w-full h-11 text-sm font-bold shadow-md hover:scale-[1.01] active:scale-[0.99] transition-transform duration-200" disabled={isPending} />
+          <Button
+            asChild
+            className="w-full h-11 text-sm font-bold shadow-md hover:scale-[1.01] active:scale-[0.99] transition-transform duration-200"
+            disabled={isPending}
+          >
+            <Link href={storeRoutes.checkout}>Continuar al checkout</Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

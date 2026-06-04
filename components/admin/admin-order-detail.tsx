@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { AdminRetryKinguinButton } from "@/components/admin/admin-retry-kinguin-button";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { OrderTransactionsCard } from "@/components/admin/order-transactions-card";
 import type { AdminOrderDetail } from "@/lib/admin/orders/types";
@@ -43,7 +44,12 @@ export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
           </h1>
           <p className="font-mono text-sm text-muted-foreground">{order.id}</p>
         </div>
-        <OrderStatusBadge status={order.status} className="text-sm" />
+        <div className="flex flex-wrap items-center gap-2">
+          <OrderStatusBadge status={order.status} className="text-sm" />
+          {order.status === "PROCESSING" ? (
+            <AdminRetryKinguinButton orderId={order.id} />
+          ) : null}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -107,7 +113,12 @@ export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
                 <span className="text-muted-foreground">Estado: </span>
                 {order.kinguinStatus}
               </p>
-            ) : null}
+            ) : (
+              <p className="text-muted-foreground">
+                Sin pedido en Kinguin todavía (revisa precio EUR y stock de keys
+                texto).
+              </p>
+            )}
             {order.isPreorder ? (
               <Badge variant="outline">Preorder</Badge>
             ) : null}

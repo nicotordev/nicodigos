@@ -1,5 +1,3 @@
-import "server-only";
-
 import { syncProductFromKinguin } from "@/lib/catalog/sync-product-from-kinguin";
 import { getEurToClpRate } from "@/lib/currency/exchange";
 import { isKinguinConfigured } from "@/lib/kinguin/client";

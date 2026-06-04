@@ -1,9 +1,11 @@
 /**
- * Desarrollo local: Next.js + túnel nombrado cloudflared (via concurrently).
- * Usa FLOW_PUBLIC_URL fija (p. ej. https://soyup.work) y CLOUDFLARE_TUNNEL_NAME.
+ * Desarrollo local: Next.js + túnel cloudflared + sync catálogo Kinguin (cada 15 min).
  *
  *   bun run dev
+ *   DEV_CATALOG_SYNC=0 bun run dev   # sin sync
  */
+
+import "dotenv/config";
 
 import concurrently from "concurrently";
 import { ensureDevPortFree } from "./ensure-dev-port";
@@ -36,27 +38,47 @@ async function main() {
   console.log(`[dev] Next.js en http://localhost:${port}`);
   console.log("");
 
-  const { result } = concurrently(
-    [
-      {
-        command: `next dev -p ${port}`,
-        name: "next",
-        prefixColor: "green",
-        env: {
-          PORT: port,
-        },
-      },
-      {
-        command: "bun run scripts/run-named-tunnel.ts",
-        name: "tunnel",
-        prefixColor: "cyan",
-      },
-    ],
+  const catalogSyncDisabled =
+    process.env.DEV_CATALOG_SYNC?.trim() === "0" ||
+    process.env.DEV_CATALOG_SYNC?.trim().toLowerCase() === "false";
+
+  const sharedEnv = { ...process.env, PORT: port };
+
+  const processes: Parameters<typeof concurrently>[0] = [
     {
-      prefix: "{name}",
-      killOthersOn: ["failure"],
+      command: `next dev -p ${port}`,
+      name: "next",
+      prefixColor: "green",
+      env: sharedEnv,
     },
-  );
+    {
+      command: "bun --env-file=.env run scripts/run-named-tunnel.ts",
+      name: "tunnel",
+      prefixColor: "cyan",
+      env: sharedEnv,
+    },
+  ];
+
+  if (!catalogSyncDisabled) {
+    console.log(
+      "[dev] Catálogo Kinguin: sync cada 15 min (proceso catalog-sync). Desactiva con DEV_CATALOG_SYNC=0",
+    );
+    processes.push({
+      command: "bun --env-file=.env run scripts/sync-catalog-scheduler.ts",
+      name: "catalog-sync",
+      prefixColor: "yellow",
+      env: sharedEnv,
+      restartTries: 100,
+      restartDelay: 5_000,
+    });
+  } else {
+    console.log("[dev] Sync catálogo desactivado (DEV_CATALOG_SYNC=0).");
+  }
+
+  const { result } = concurrently(processes, {
+    prefix: "{name}",
+    killOthersOn: ["failure"],
+  });
 
   await result;
 }

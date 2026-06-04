@@ -26,6 +26,7 @@ export function createKinguinHttpClient(
 ): AxiosInstance {
   return axios.create({
     baseURL: apiBase.replace(/\/$/, ""),
+    timeout: 20_000,
     headers: {
       "X-Api-Key": apiKey,
     },

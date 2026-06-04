@@ -13,6 +13,7 @@ export const storeRoutes = {
   signIn: "/auth/sign-in",
   signUp: "/auth/sign-up",
   cart: "/cart",
+  checkout: "/checkout",
   checkoutReturn: "/checkout/return",
   wishlist: "/wishlist",
   orders: "/orders",

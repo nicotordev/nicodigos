@@ -21,6 +21,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { ChileLocationFields } from "@/components/chile/chile-location-fields";
 import { ADDRESS_TYPE_LABELS, COUNTRY_OPTIONS } from "@/lib/settings/constants";
 import type { AddressType, UserAddress } from "@/lib/settings/types";
 
@@ -173,44 +174,52 @@ export function AddressEditorSheet({
               </NativeSelect>
             </Field>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={`${formId}-region`}>
-                  Región / estado
-                </FieldLabel>
-                <Input
-                  id={`${formId}-region`}
-                  value={form.region}
-                  onChange={(e) => update("region", e.target.value)}
-                  placeholder={isChile ? "Región Metropolitana" : "Estado"}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`${formId}-city`}>Ciudad</FieldLabel>
-                <Input
-                  id={`${formId}-city`}
-                  value={form.city}
-                  onChange={(e) => update("city", e.target.value)}
-                />
-              </Field>
-            </div>
-
-            <Field>
-              <FieldLabel htmlFor={`${formId}-commune`}>
-                {isChile ? "Comuna" : "Distrito / municipio"}
-              </FieldLabel>
-              <Input
-                id={`${formId}-commune`}
-                value={form.commune}
-                onChange={(e) => update("commune", e.target.value)}
+            {isChile ? (
+              <ChileLocationFields
+                idPrefix={formId}
+                values={{
+                  region: form.region,
+                  commune: form.commune,
+                  city: form.city,
+                }}
+                onChange={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
               />
-              {isChile ? (
-                <FieldDescription>
-                  En Chile, la comuna es obligatoria para direcciones de
-                  facturación.
-                </FieldDescription>
-              ) : null}
-            </Field>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor={`${formId}-region`}>
+                      Región / estado
+                    </FieldLabel>
+                    <Input
+                      id={`${formId}-region`}
+                      value={form.region}
+                      onChange={(e) => update("region", e.target.value)}
+                      placeholder="Estado"
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${formId}-city`}>Ciudad</FieldLabel>
+                    <Input
+                      id={`${formId}-city`}
+                      value={form.city}
+                      onChange={(e) => update("city", e.target.value)}
+                    />
+                  </Field>
+                </div>
+
+                <Field>
+                  <FieldLabel htmlFor={`${formId}-commune`}>
+                    Distrito / municipio
+                  </FieldLabel>
+                  <Input
+                    id={`${formId}-commune`}
+                    value={form.commune}
+                    onChange={(e) => update("commune", e.target.value)}
+                  />
+                </Field>
+              </>
+            )}
 
             <Field>
               <FieldLabel htmlFor={`${formId}-street`}>

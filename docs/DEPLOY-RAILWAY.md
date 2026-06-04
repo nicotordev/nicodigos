@@ -113,11 +113,16 @@ railway variable set -s cron-sync-catalog \
 railway up --service cron-sync-catalog --detach
 ```
 
-Local:
+Local (mismo lote que producción, sin HTTP):
 
 ```bash
-bun --env-file=.env run cron:sync-catalog
+bun --env-file=.env run sync:catalog
+# o una vez vía cron script:
+CRON_SYNC_MODE=local bun --env-file=.env run cron:sync-catalog
 ```
+
+Con `bun run dev`, el scheduler corre cada **15 min** (`scripts/sync-catalog-scheduler.ts`).
+Desactívalo con `DEV_CATALOG_SYNC=0`.
 
 Cada ejecución procesa un lote; con el schedule fijo recorre todo el catálogo.
 

@@ -1,11 +1,32 @@
 /**
- * Dispara el cron de sincronización Kinguin en la app desplegada.
+ * Producción (Railway): POST /api/cron/sync-catalog con CRON_SECRET.
+ * Local directo (sin Next): CRON_SYNC_MODE=local bun run cron:sync-catalog
  *
- *   bun run scripts/cron-sync-catalog.ts
- *   bun --env-file=.env run scripts/cron-sync-catalog.ts
+ *   bun --env-file=.env run cron:sync-catalog
+ *   bun --env-file=.env run sync:catalog
  */
 
+async function runCronSyncLocal() {
+  const { syncCatalogBatchFromKinguin } = await import(
+    "../lib/catalog/sync-catalog-batch"
+  );
+  const prisma = (await import("../lib/prisma")).default;
+
+  const result = await syncCatalogBatchFromKinguin();
+  console.log("[cron-sync:local]", JSON.stringify(result, null, 2));
+  await prisma.$disconnect();
+
+  if (!result.configured || (result.failed > 0 && result.succeeded === 0)) {
+    process.exit(1);
+  }
+}
+
 async function runCronSync() {
+  if (process.env.CRON_SYNC_MODE?.trim().toLowerCase() === "local") {
+    await runCronSyncLocal();
+    return;
+  }
+
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) {
     console.error("[cron-sync] Falta CRON_SECRET");

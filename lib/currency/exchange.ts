@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getCachedJson, setCachedJson } from "@/lib/redis/cache";
 import {
   APP_CURRENCY,

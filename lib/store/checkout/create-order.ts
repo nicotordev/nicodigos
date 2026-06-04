@@ -2,6 +2,12 @@ import "server-only";
 
 import { Prisma } from "@/lib/generated/prisma/client";
 import prisma from "@/lib/prisma";
+import type { CheckoutBillingInput } from "@/lib/store/checkout/billing";
+
+export type CheckoutOrderBillingMeta = {
+  addressId: string;
+  addressLabel: string;
+};
 
 export type CheckoutOrderDraft = {
   orderId: string;
@@ -13,6 +19,8 @@ export type CheckoutOrderDraft = {
 
 export async function createOrderFromCart(
   userId: string,
+  billing: CheckoutBillingInput,
+  billingMeta: CheckoutOrderBillingMeta,
 ): Promise<CheckoutOrderDraft | { error: string }> {
   const cart = await prisma.cart.findUnique({
     where: { userId },
@@ -48,18 +56,6 @@ export async function createOrderFromCart(
 
   if (!cart || cart.items.length === 0) {
     return { error: "Tu carrito está vacío." };
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    return {
-      error:
-        "No encontramos tu correo. Actualiza tu perfil e intenta de nuevo.",
-    };
   }
 
   let subtotal = 0;
@@ -118,6 +114,24 @@ export async function createOrderFromCart(
       subtotal: totalDecimal,
       total: totalDecimal,
       isPreorder,
+      billingDocumentType: billing.documentType,
+      billingAddressId: billingMeta.addressId,
+      billingAddressLabel: billingMeta.addressLabel,
+      billingFullName:
+        billing.documentType === "factura"
+          ? billing.companyName
+          : billing.fullName,
+      billingEmail: billing.email,
+      billingPhone: billing.phone,
+      billingRut: billing.rut,
+      billingGiro: billing.giro,
+      billingCompanyName: billing.companyName,
+      billingRegion: billing.region,
+      billingCommune: billing.commune,
+      billingCity: billing.city,
+      billingStreet: billing.street,
+      billingUnit: billing.unit ?? "",
+      termsAcceptedAt: new Date(),
       items: {
         create: orderItems,
       },
@@ -132,7 +146,7 @@ export async function createOrderFromCart(
 
   return {
     orderId: order.id,
-    email: user.email,
+    email: billing.email,
     subject,
     amount,
     itemCount,

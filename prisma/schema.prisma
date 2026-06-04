@@ -415,21 +415,36 @@ model WishlistItem {
 // --- Orders ---
 
 model Order {
-  id                String        @id @default(cuid())
-  userId            String
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status            OrderStatus   @default(PENDING)
-  currency          String        @default("CLP")
-  subtotal          Decimal       @db.Decimal(10, 2)
-  total             Decimal       @db.Decimal(10, 2)
-  kinguinOrderId    String?       @unique
-  kinguinStatus     String?
-  isPreorder        Boolean       @default(false)
-  preorderReleaseAt DateTime?
-  items             OrderItem[]
-  transactions      Transaction[]
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status              OrderStatus   @default(PENDING)
+  currency            String        @default("CLP")
+  subtotal            Decimal       @db.Decimal(10, 2)
+  total               Decimal       @db.Decimal(10, 2)
+  kinguinOrderId      String?       @unique
+  kinguinStatus       String?
+  isPreorder          Boolean       @default(false)
+  preorderReleaseAt   DateTime?
+  billingDocumentType String        @default("boleta")
+  billingAddressId    String?
+  billingAddressLabel String        @default("")
+  billingFullName     String        @default("")
+  billingEmail        String        @default("")
+  billingPhone        String        @default("")
+  billingRut          String        @default("")
+  billingGiro         String        @default("")
+  billingCompanyName  String        @default("")
+  billingRegion       String        @default("")
+  billingCommune      String        @default("")
+  billingCity         String        @default("")
+  billingStreet       String        @default("")
+  billingUnit         String        @default("")
+  termsAcceptedAt     DateTime?
+  items               OrderItem[]
+  transactions        Transaction[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   @@index([userId])
   @@index([status])

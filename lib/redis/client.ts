@@ -1,5 +1,3 @@
-import "server-only";
-
 import Redis from "ioredis";
 
 const globalForRedis = globalThis as typeof globalThis & {

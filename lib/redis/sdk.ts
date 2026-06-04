@@ -1,5 +1,3 @@
-import "server-only";
-
 import Redis from "ioredis";
 import { getRedis, isRedisConfigured } from "@/lib/redis/client";
 

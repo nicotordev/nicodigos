@@ -46,7 +46,16 @@ export function resolveCatalogQty(product: KinguinProduct): number {
     return 0;
   }
 
-  return getOfferQty(primary) || product.totalQty || product.qty || 0;
+  const textQty = getOfferTextQty(primary);
+  if (textQty > 0) {
+    return textQty;
+  }
+
+  if (primary.isPreorder) {
+    return getOfferQty(primary) || product.totalQty || product.qty || 0;
+  }
+
+  return 0;
 }
 
 export function productHasStockableOffers(product: KinguinProduct): boolean {

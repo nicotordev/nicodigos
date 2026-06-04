@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getRedisCacheSdk } from "@/lib/redis/sdk";
 
 export async function getCachedJson<T>(key: string): Promise<T | null> {

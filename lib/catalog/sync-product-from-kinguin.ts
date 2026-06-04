@@ -1,5 +1,3 @@
-import "server-only";
-
 import { mapOffer } from "@/lib/admin/products/map-kinguin";
 import { mapKinguinProductMetadata } from "@/lib/admin/products/kinguin-metadata";
 import {
