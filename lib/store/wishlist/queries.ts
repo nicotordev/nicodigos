@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import type { WishlistView } from "@/lib/store/types";
+import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 const productSelect = {
   id: true,
@@ -48,7 +49,7 @@ export async function getWishlistView(
       addedAt: item.createdAt.toISOString(),
       product: {
         ...item.product,
-        sellPrice: item.product.sellPrice.toString(),
+        sellPrice: getConsumerPrice(item.product.sellPrice),
       },
     })),
   };

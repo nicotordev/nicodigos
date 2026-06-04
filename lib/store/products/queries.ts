@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import type { SeoMetadataDocument } from "@/lib/seo/metadata";
 import { seoMetadataFromRelation } from "@/lib/seo/metadata";
 import type { KinguinSystemRequirement } from "@/types/kinguin";
+import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 export type StorefrontProductImage = {
   id: string;
@@ -128,7 +129,7 @@ export async function getStorefrontProductBySlug(
     platform: product.platform,
     description: product.description,
     coverImageUrl: product.coverImageUrl,
-    sellPrice: product.sellPrice.toString(),
+    sellPrice: getConsumerPrice(product.sellPrice),
     qty: product.qty,
     isOffer: product.isOffer,
     isPreorder: product.isPreorder,

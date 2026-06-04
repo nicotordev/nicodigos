@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import type { CartView, StoreCounts } from "@/lib/store/types";
+import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 const productSelect = {
   id: true,
@@ -46,21 +47,25 @@ export async function getCartView(userId: string): Promise<CartView | null> {
     return null;
   }
 
-  let subtotal = 0;
+  let consumerSubtotal = 0;
+  let netSubtotal = 0;
 
   const items = cart.items.map((item) => {
-    const unitPrice = Number(item.offer.sellPrice.toString());
-    const lineTotal = unitPrice * item.quantity;
-    subtotal += lineTotal;
+    const netUnitPrice = Number(item.offer.sellPrice.toString());
+    netSubtotal += netUnitPrice * item.quantity;
+
+    const consumerUnitPrice = Number(getConsumerPrice(item.offer.sellPrice));
+    const consumerLineTotal = consumerUnitPrice * item.quantity;
+    consumerSubtotal += consumerLineTotal;
 
     return {
       id: item.id,
       quantity: item.quantity,
-      unitPrice: item.offer.sellPrice.toString(),
-      lineTotal: lineTotal.toFixed(0),
+      unitPrice: consumerUnitPrice.toString(),
+      lineTotal: consumerLineTotal.toFixed(0),
       product: {
         ...item.product,
-        sellPrice: item.product.sellPrice.toString(),
+        sellPrice: getConsumerPrice(item.product.sellPrice),
       },
       offer: {
         id: item.offer.id,
@@ -74,7 +79,8 @@ export async function getCartView(userId: string): Promise<CartView | null> {
     id: cart.id,
     items,
     itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    subtotal: subtotal.toFixed(0),
+    subtotal: consumerSubtotal.toFixed(0),
+    netSubtotal: netSubtotal.toFixed(0),
   };
 }
 

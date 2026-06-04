@@ -27,6 +27,7 @@ export type CartView = {
   items: CartLineView[];
   itemCount: number;
   subtotal: string;
+  netSubtotal?: string;
 };
 
 export type WishlistItemView = {

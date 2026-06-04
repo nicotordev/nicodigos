@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 export const CATALOG_PAGE_SIZE = 24;
 
@@ -47,7 +48,7 @@ function mapStorefrontProduct(product: {
     name: product.name,
     platform: product.platform,
     coverImageUrl: product.coverImageUrl,
-    sellPrice: product.sellPrice.toString(),
+    sellPrice: getConsumerPrice(product.sellPrice),
   };
 }
 

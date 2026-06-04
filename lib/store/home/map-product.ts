@@ -1,4 +1,5 @@
 import type { StorefrontProductCard, StorefrontProductOffer } from "./types";
+import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 type ProductOfferRow = {
   sellPrice: { toString(): string };
@@ -36,7 +37,7 @@ function pickDefaultOffer(
 
   const offer = offers[0];
   return {
-    sellPrice: offer.sellPrice.toString(),
+    sellPrice: getConsumerPrice(offer.sellPrice),
     qty: offer.qty,
     isPreorder: offer.isPreorder,
   };
@@ -58,11 +59,11 @@ function computeDiscountPercent(
 export function mapStorefrontProductCard(
   product: ProductCardRow,
 ): StorefrontProductCard {
-  const sellPrice = product.sellPrice.toString();
+  const sellPrice = getConsumerPrice(product.sellPrice);
   const costPrice = Number(product.costPrice.toString());
   const sell = Number(sellPrice);
   const listPrice =
-    product.isOffer && costPrice > sell ? product.costPrice.toString() : null;
+    product.isOffer && costPrice > Number(product.sellPrice.toString()) ? getConsumerPrice(product.costPrice) : null;
 
   return {
     id: product.id,
@@ -74,7 +75,7 @@ export function mapStorefrontProductCard(
     coverImageUrl: product.coverImageUrl,
     sellPrice,
     listPrice,
-    discountPercent: listPrice ? computeDiscountPercent(costPrice, sell) : null,
+    discountPercent: listPrice ? computeDiscountPercent(costPrice, Number(product.sellPrice.toString())) : null,
     qty: product.qty,
     isOffer: product.isOffer,
     isPreorder: product.isPreorder,

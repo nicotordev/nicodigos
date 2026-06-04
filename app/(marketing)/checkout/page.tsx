@@ -57,7 +57,7 @@ export default async function CheckoutPage() {
         <CheckoutForm
           {...checkoutData}
           userId={session.user.id}
-          subtotal={Number(cart.subtotal)}
+          subtotal={Number(cart.netSubtotal ?? cart.subtotal)}
           itemCount={cart.itemCount}
         />
       </div>
