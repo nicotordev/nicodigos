@@ -14,6 +14,7 @@ import { syncProductClpFromSourceIfNeeded } from "@/lib/admin/products/sync-clp"
 import { getEurToClpRate } from "@/lib/currency/exchange";
 import { isOpenAIConfigured } from "@/lib/openai/env";
 import { isR2Configured } from "@/lib/r2/env";
+import prisma from "@/lib/prisma";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -38,7 +39,14 @@ export default async function AdminProductEditPage({ params }: PageProps) {
     syncProductVideosIfNeeded(id),
     syncProductMetadataFromKinguinIfNeeded(id),
   ]);
-  const product = await getAdminProductForEdit(id);
+  
+  const [product, categories] = await Promise.all([
+    getAdminProductForEdit(id),
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   if (!product) {
     notFound();
@@ -71,6 +79,7 @@ export default async function AdminProductEditPage({ params }: PageProps) {
 
       <ProductEditForm
         product={product}
+        categories={categories}
         exchangeRate={fx.rate}
         r2Configured={isR2Configured()}
         openAiConfigured={isOpenAIConfigured()}

@@ -79,6 +79,8 @@ export const updateProductSchema = z.object({
   activationDetails: z.string().trim().optional(),
   countryLimitations: stringListSchema,
   languages: stringListSchema,
+  categoryIds: z.array(z.string()).default([]),
+  tags: stringListSchema,
   images: z.array(productImageInputSchema).max(24, "Máximo 24 imágenes"),
   videos: z.array(productVideoInputSchema).max(12, "Máximo 12 trailers"),
   systemRequirements: z

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { IconX } from "@tabler/icons-react";
 import {
   mapProductImagesToGallery,
   ProductGalleryEditor,
@@ -69,6 +70,7 @@ import {
 
 type ProductEditFormProps = {
   product: AdminProductEditData;
+  categories: { id: string; name: string }[];
   exchangeRate: number;
   r2Configured: boolean;
   openAiConfigured: boolean;
@@ -117,6 +119,7 @@ function applyAiTextToDescription(text: string): string {
 
 export function ProductEditForm({
   product,
+  categories,
   exchangeRate,
   r2Configured,
   openAiConfigured,
@@ -158,6 +161,8 @@ export function ProductEditForm({
     isOffer: product.isOffer,
     isFeatured: product.isFeatured,
     isPreorder: product.isPreorder,
+    categoryIds: product.categoryIds,
+    tags: product.tags,
   });
 
   function updateField<K extends keyof typeof form>(
@@ -362,6 +367,87 @@ export function ProductEditForm({
                 Desmarcado = borrador (no visible para clientes). «Destacar en
                 ofertas» → /offers. «Destacar en inicio» → carrusel de la home.
               </FieldDescription>
+            </Field>
+
+            <Field>
+              <FieldLabel>Categorías</FieldLabel>
+              <FieldDescription>
+                Asocia este producto a una o más categorías de la tienda.
+              </FieldDescription>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3 rounded-xl border border-border/80 bg-muted/10 p-4">
+                {categories.map((cat) => {
+                  const isChecked = form.categoryIds.includes(cat.id);
+                  return (
+                    <div key={cat.id} className="flex items-center gap-2.5">
+                      <Checkbox
+                        id={`category-${cat.id}`}
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          updateField(
+                            "categoryIds",
+                            checked === true
+                              ? [...form.categoryIds, cat.id]
+                              : form.categoryIds.filter((id) => id !== cat.id),
+                          );
+                        }}
+                        disabled={isPending}
+                      />
+                      <label
+                        htmlFor={`category-${cat.id}`}
+                        className="text-sm font-medium text-foreground/90 cursor-pointer select-none"
+                      >
+                        {cat.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="tags-input">Etiquetas (Tags)</FieldLabel>
+              <FieldDescription>
+                Escribe una etiqueta y presiona Enter o coma para añadirla.
+              </FieldDescription>
+              <div className="mt-2.5 space-y-3">
+                <Input
+                  id="tags-input"
+                  placeholder="Ej: Oferta, Acción, Nuevo..."
+                  disabled={isPending}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      const target = e.currentTarget;
+                      const value = target.value.trim().replace(/,$/, "");
+                      if (value && !form.tags.includes(value)) {
+                        updateField("tags", [...form.tags, value]);
+                        target.value = "";
+                      }
+                    }
+                  }}
+                />
+                {form.tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 rounded-xl border border-dashed border-border bg-muted/5 p-3">
+                    {form.tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full border border-border/60 text-xs"
+                      >
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateField("tags", form.tags.filter((t) => t !== tag))}
+                          className="text-muted-foreground hover:text-foreground shrink-0 rounded-full focus:outline-none transition-colors"
+                          title="Eliminar etiqueta"
+                        >
+                          <IconX className="size-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </Field>
           </FieldGroup>
         </CardContent>

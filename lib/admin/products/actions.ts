@@ -249,8 +249,11 @@ export async function updateProductAction(
         isFeatured: data.isFeatured,
         isPreorder: data.isPreorder,
         activationDetails: data.activationDetails || null,
-        countryLimitations: data.countryLimitations,
         languages: data.languages,
+        categories: {
+          set: data.categoryIds.map((id) => ({ id })),
+        },
+        tags: data.tags,
         regionalLimitations: data.regionalLimitations || null,
         systemRequirements:
           data.systemRequirements.length > 0

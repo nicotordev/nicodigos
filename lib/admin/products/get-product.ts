@@ -64,6 +64,8 @@ export type AdminProductEditData = {
   ageRating: string | null;
   systemRequirements: KinguinSystemRequirement[];
   steamAppId: string | null;
+  categoryIds: string[];
+  tags: string[];
   images: AdminProductImageEdit[];
   videos: AdminProductVideoEdit[];
   offers: AdminProductOfferEdit[];
@@ -82,6 +84,7 @@ export async function getAdminProductForEdit(
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
+      categories: { select: { id: true } },
       images: { orderBy: { sortOrder: "asc" } },
       videos: { orderBy: { sortOrder: "asc" } },
       offers: {
@@ -125,6 +128,8 @@ export async function getAdminProductForEdit(
     ageRating: product.ageRating,
     systemRequirements: parseSystemRequirements(product.systemRequirements),
     steamAppId: product.steamAppId,
+    categoryIds: product.categories.map((c) => c.id),
+    tags: product.tags,
     images: product.images.map((image) => ({
       id: image.id,
       url: image.url,
