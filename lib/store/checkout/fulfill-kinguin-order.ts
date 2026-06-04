@@ -253,7 +253,12 @@ async function claimKinguinPlacement(
     where: {
       id: order.id,
       kinguinOrderId: null,
-      NOT: { kinguinStatus: { startsWith: KINGUIN_PLACING_PREFIX } },
+      OR: [
+        { kinguinStatus: null },
+        {
+          NOT: { kinguinStatus: { startsWith: KINGUIN_PLACING_PREFIX } },
+        },
+      ],
     },
     data: {
       kinguinStatus: `${KINGUIN_PLACING_PREFIX}${Date.now()}`,

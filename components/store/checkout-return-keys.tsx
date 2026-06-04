@@ -35,9 +35,9 @@ export function CheckoutReturnKeys({ keys }: CheckoutReturnKeysProps) {
         {keys.map((key) => (
           <li
             key={key.id}
-            className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 space-y-2"
+            className="rounded-xl border border-border/60 bg-muted/30 px-4 py-4 space-y-2.5"
           >
-            <p className="text-xs font-medium text-foreground truncate">
+            <p className="text-xs font-semibold text-foreground truncate">
               {key.productName}
             </p>
             <div className="flex items-center gap-2 rounded-lg bg-background border border-border/50 p-2.5 font-mono text-xs">
@@ -59,6 +59,14 @@ export function CheckoutReturnKeys({ keys }: CheckoutReturnKeysProps) {
                 )}
               </Button>
             </div>
+            {key.activationDetails ? (
+              <div className="mt-2 rounded-lg bg-background/50 border border-border/40 p-3 text-xs text-muted-foreground whitespace-pre-line leading-relaxed">
+                <p className="font-bold text-foreground/90 mb-1">
+                  Instrucciones de activación:
+                </p>
+                {key.activationDetails}
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

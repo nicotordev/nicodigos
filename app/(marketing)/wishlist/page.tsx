@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { WishlistViewPanel } from "@/components/store/wishlist-view";
-import { requireStoreUser } from "@/lib/store/auth";
+import { getOptionalStoreSession } from "@/lib/store/auth";
 import { getWishlistView } from "@/lib/store/wishlist/queries";
 import { storeRoutes } from "@/lib/store/navigation";
 import { IconHeart } from "@tabler/icons-react";
@@ -10,12 +10,18 @@ export const metadata: Metadata = {
 };
 
 export default async function WishlistPage() {
-  const session = await requireStoreUser(storeRoutes.wishlist);
-  const wishlist = (await getWishlistView(session.user.id)) ?? {
-    id: "",
-    items: [],
-    itemCount: 0,
-  };
+  const session = await getOptionalStoreSession();
+  const wishlist = session
+    ? ((await getWishlistView(session.user.id)) ?? {
+        id: "",
+        items: [],
+        itemCount: 0,
+      })
+    : {
+        id: "",
+        items: [],
+        itemCount: 0,
+      };
 
   return (
     <main className="flex-1 relative overflow-hidden bg-background">

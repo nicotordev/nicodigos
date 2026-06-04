@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { requireStoreUser } from "@/lib/store/auth";
+import {
+  getOrCreateStoreSession,
+  getOptionalStoreSession,
+} from "@/lib/store/auth";
 import {
   getOrCreateCart,
   resolveProductOfferId,
@@ -20,7 +23,7 @@ function revalidateStorePaths() {
 export async function toggleWishlistAction(
   productId: string,
 ): Promise<StoreActionResult<{ inWishlist: boolean }>> {
-  const session = await requireStoreUser(storeRoutes.wishlist);
+  const session = await getOrCreateStoreSession();
 
   if (!productId.trim()) {
     return { success: false, error: "Producto no válido." };
@@ -74,7 +77,10 @@ export async function toggleWishlistAction(
 export async function removeWishlistItemAction(
   itemId: string,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.wishlist);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
 
   const item = await prisma.wishlistItem.findFirst({
     where: { id: itemId, wishlist: { userId: session.user.id } },
@@ -93,7 +99,10 @@ export async function removeWishlistItemAction(
 export async function addWishlistItemToCartAction(
   itemId: string,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.wishlist);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
 
   const item = await prisma.wishlistItem.findFirst({
     where: { id: itemId, wishlist: { userId: session.user.id } },
@@ -135,7 +144,10 @@ export async function addWishlistItemToCartAction(
 }
 
 export async function clearWishlistAction(): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.wishlist);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
   const wishlist = await prisma.wishlist.findUnique({
     where: { userId: session.user.id },
     select: { id: true },

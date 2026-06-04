@@ -5,6 +5,7 @@ export type CheckoutReturnKeyItem = {
   productName: string;
   serial: string;
   contentType: string;
+  activationDetails?: string | null;
 };
 
 export async function loadCheckoutReturnKeys(
@@ -18,6 +19,11 @@ export async function loadCheckoutReturnKeys(
     },
     select: {
       name: true,
+      product: {
+        select: {
+          activationDetails: true,
+        },
+      },
       keys: {
         where: {
           status: "DELIVERED",
@@ -42,6 +48,7 @@ export async function loadCheckoutReturnKeys(
         productName: item.name,
         serial: key.serial,
         contentType: key.contentType,
+        activationDetails: item.product?.activationDetails ?? null,
       });
     }
   }

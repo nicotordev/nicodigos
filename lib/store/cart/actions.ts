@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { requireStoreUser } from "@/lib/store/auth";
+import {
+  getOrCreateStoreSession,
+  getOptionalStoreSession,
+} from "@/lib/store/auth";
 import {
   getOrCreateCart,
   resolveProductOfferId,
@@ -28,7 +31,7 @@ export async function addToCartAction(
   productId: string,
   quantity = 1,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.cart);
+  const session = await getOrCreateStoreSession();
 
   if (!productId.trim()) {
     return { success: false, error: "Producto no válido." };
@@ -70,7 +73,10 @@ export async function updateCartItemQuantityAction(
   itemId: string,
   quantity: number,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.cart);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
   const item = await requireCartItemOwner(itemId, session.user.id);
 
   if (!item) {
@@ -101,7 +107,10 @@ export async function updateCartItemQuantityAction(
 export async function removeCartItemAction(
   itemId: string,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.cart);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
   const item = await requireCartItemOwner(itemId, session.user.id);
 
   if (!item) {
@@ -114,7 +123,10 @@ export async function removeCartItemAction(
 }
 
 export async function clearCartAction(): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.cart);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
   const cart = await prisma.cart.findUnique({
     where: { userId: session.user.id },
     select: { id: true },
@@ -131,7 +143,10 @@ export async function clearCartAction(): Promise<StoreActionResult> {
 export async function moveCartItemToWishlistAction(
   itemId: string,
 ): Promise<StoreActionResult> {
-  const session = await requireStoreUser(storeRoutes.cart);
+  const session = await getOptionalStoreSession();
+  if (!session?.user) {
+    return { success: false, error: "No tienes una sesión activa." };
+  }
   const item = await requireCartItemOwner(itemId, session.user.id);
 
   if (!item) {

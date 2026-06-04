@@ -126,6 +126,27 @@ Desactívalo con `DEV_CATALOG_SYNC=0`.
 
 Cada ejecución procesa un lote; con el schedule fijo recorre todo el catálogo.
 
+## 5b. Webhooks Kinguin
+
+Registra en el [panel Kinguin](https://www.kinguin.net/integration/dashboard/stores) la misma URL para los tres tipos:
+
+- `https://<tu-dominio>/api/webhooks/kinguin`
+
+Variable en Railway (servicio web):
+
+| Variable                 | Valor                                      |
+| ------------------------ | ------------------------------------------ |
+| `KINGUIN_WEBHOOK_SECRET` | Secret del panel (header `X-Event-Secret`) |
+
+Eventos soportados: `product.update`, `order.status`, `order.complete` (legacy). El endpoint responde **204** en &lt;1 s; el procesamiento corre en segundo plano.
+
+Prueba local del probe (como el botón TEST URL):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST "$FLOW_PUBLIC_URL/api/webhooks/kinguin" \
+  -H "X-Event-Secret: $KINGUIN_WEBHOOK_SECRET"
+```
+
 ## 6. Verificación
 
 - Health: `GET /api/health` → `{"ok":true}`

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CartViewPanel } from "@/components/store/cart-view";
 import { CheckoutSteps } from "@/components/store/checkout-steps";
-import { requireStoreUser } from "@/lib/store/auth";
+import { getOptionalStoreSession } from "@/lib/store/auth";
 import { getCartView } from "@/lib/store/cart/queries";
 import { storeRoutes } from "@/lib/store/navigation";
 import { IconShoppingCart } from "@tabler/icons-react";
@@ -11,13 +11,20 @@ export const metadata: Metadata = {
 };
 
 export default async function CartPage() {
-  const session = await requireStoreUser(storeRoutes.cart);
-  const cart = (await getCartView(session.user.id)) ?? {
-    id: "",
-    items: [],
-    itemCount: 0,
-    subtotal: "0",
-  };
+  const session = await getOptionalStoreSession();
+  const cart = session
+    ? ((await getCartView(session.user.id)) ?? {
+        id: "",
+        items: [],
+        itemCount: 0,
+        subtotal: "0",
+      })
+    : {
+        id: "",
+        items: [],
+        itemCount: 0,
+        subtotal: "0",
+      };
 
   return (
     <main className="flex-1 relative overflow-hidden bg-background">

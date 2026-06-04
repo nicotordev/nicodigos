@@ -5,7 +5,7 @@ import { CheckoutForm } from "@/components/store/checkout-form";
 import { CheckoutSteps } from "@/components/store/checkout-steps";
 import { getCheckoutPageData } from "@/lib/store/checkout/get-checkout-initial";
 import { getCartView } from "@/lib/store/cart/queries";
-import { requireStoreUser } from "@/lib/store/auth";
+import { getOptionalStoreSession } from "@/lib/store/auth";
 import { storeRoutes } from "@/lib/store/navigation";
 import { formatMoney } from "@/lib/currency/format";
 
@@ -14,7 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  const session = await requireStoreUser(storeRoutes.checkout);
+  const session = await getOptionalStoreSession();
+
+  if (!session?.user) {
+    redirect(storeRoutes.cart);
+  }
+
   const cart = await getCartView(session.user.id);
 
   if (!cart || cart.items.length === 0) {

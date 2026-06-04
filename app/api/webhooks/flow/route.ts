@@ -1,5 +1,8 @@
-import { confirmFlowPaymentByToken } from "@/lib/store/checkout/confirm-payment";
+import { after } from "next/server";
 import { NextResponse } from "next/server";
+
+import { confirmFlowPaymentByToken } from "@/lib/store/checkout/confirm-payment";
+import { fulfillKinguinOrder } from "@/lib/store/checkout/fulfill-kinguin-order";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +36,22 @@ async function handleConfirmation(request: Request) {
   }
 
   try {
-    await confirmFlowPaymentByToken(token);
+    const payment = await confirmFlowPaymentByToken(token);
+
+    if (payment.outcome === "paid" && payment.orderId) {
+      const orderId = payment.orderId;
+      after(async () => {
+        try {
+          const result = await fulfillKinguinOrder(orderId);
+          console.info(
+            `[flow-webhook] fulfill ${orderId} → ${result.status} keys=${result.keysDelivered}`,
+          );
+        } catch (error) {
+          console.error("[flow-webhook] fulfill", orderId, error);
+        }
+      });
+    }
+
     return new NextResponse("OK", { status: 200 });
   } catch (error) {
     console.error("[flow webhook]", error);

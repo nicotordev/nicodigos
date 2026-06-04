@@ -22,7 +22,8 @@ function logFlowUrls() {
 
   if (publicUrl) {
     console.log(`[dev] FLOW_PUBLIC_URL=${publicUrl} (webhook Flow)`);
-    console.log(`[dev] Webhook: ${publicUrl}/api/webhooks/flow`);
+    console.log(`[dev] Webhook Flow: ${publicUrl}/api/webhooks/flow`);
+    console.log(`[dev] Webhook Kinguin: ${publicUrl}/api/webhooks/kinguin`);
   } else {
     console.warn("[dev] FLOW_PUBLIC_URL no definida.");
     console.warn(FLOW_TUNNEL_LIMITED_MESSAGE);

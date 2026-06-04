@@ -79,10 +79,20 @@ export async function getCheckoutPageData(
         unit: "",
       };
 
+  let fullName = settings.profile.fullName.trim();
+  if (fullName === "Invitado") {
+    fullName = "";
+  }
+
+  let email = settings.profile.email.trim();
+  if (email.startsWith("guest_") && email.endsWith("@nicodigos.cl")) {
+    email = "";
+  }
+
   let initialValues: CheckoutBillingInitial = {
     documentType: isCompany ? "factura" : "boleta",
-    fullName: settings.profile.fullName.trim() || "",
-    email: settings.profile.email.trim(),
+    fullName,
+    email,
     phone: settings.profile.phone.trim(),
     rut: settings.identification.identificationNumber.trim(),
     giro: "",

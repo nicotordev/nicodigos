@@ -182,7 +182,36 @@ export function CheckoutReturnView({ token }: CheckoutReturnViewProps) {
     }
 
     async function poll() {
-      if (cancelled || pollCount >= RETURN_POLL_MAX || !activeOrderId) return;
+      if (cancelled || !activeOrderId) return;
+
+      if (pollCount >= RETURN_POLL_MAX) {
+        setView((current) => {
+          if (
+            current.status !== "ready" ||
+            hasCheckoutReturnKeys(current.result)
+          ) {
+            return current;
+          }
+          return {
+            status: "ready",
+            result: {
+              ...current.result,
+              outcome: "paid",
+              orderId: activeOrderId,
+              message:
+                "Tu pago está confirmado. La entrega puede tardar un poco más; recarga esta página en un minuto o revisa tu correo.",
+              fulfillment: {
+                status: "processing",
+                message:
+                  "Seguimos esperando las keys del proveedor. Si no aparecen, contáctanos con tu número de pedido.",
+                keysDelivered: 0,
+              },
+            },
+          };
+        });
+        return;
+      }
+
       pollCount += 1;
 
       try {
@@ -200,7 +229,11 @@ export function CheckoutReturnView({ token }: CheckoutReturnViewProps) {
           }
         }
       } catch {
-        // siguiente ciclo de poll
+        if (!cancelled && pollCount < RETURN_POLL_MAX) {
+          pollTimer = setTimeout(() => {
+            void poll();
+          }, RETURN_POLL_MS);
+        }
       }
     }
 

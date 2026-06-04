@@ -112,11 +112,11 @@ export async function syncCheckoutReturnDeliveryAction(
       orderId,
       keys: [],
       message:
-        "Tu pago está confirmado, pero hubo un problema al contactar al proveedor. Intenta de nuevo en unos segundos.",
+        "Tu pago está confirmado, pero hubo un problema al contactar al proveedor. Espera un momento o recarga esta página.",
       fulfillment: {
-        status: "processing",
+        status: "failed",
         message:
-          "Estamos reintentando obtener tus keys; aparecerán en esta página.",
+          "No pudimos contactar al proveedor en este momento. Si el problema continúa, escríbenos a soporte con tu número de pedido.",
         keysDelivered: 0,
       },
     };
