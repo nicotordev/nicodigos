@@ -201,19 +201,34 @@ model Verification {
 
 // --- E-commerce catalog ---
 
+/// SEO document for Next.js `generateMetadata` (Metadata API shape, stored as JSON).
+model SeoMetadata {
+  id         String    @id @default(cuid())
+  document   Json
+  productId  String?   @unique
+  categoryId String?   @unique
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("seo_metadata")
+}
+
 model Category {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
-  slug        String    @unique
-  description String?   @db.Text
+  slug        String       @unique
+  description String?      @db.Text
   /// Icono o miniatura en listados y menú de la tienda.
   imageUrl    String?
   /// Banner ancho en la página o cabecera de la categoría.
   bannerUrl   String?
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   products    Product[]
+  seoMetadata SeoMetadata?
 
   @@index([sortOrder])
   @@map("category")
@@ -270,6 +285,7 @@ model Product {
   cartItems           CartItem[]
   wishlistItems       WishlistItem[]
   orderItems          OrderItem[]
+  seoMetadata         SeoMetadata?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 

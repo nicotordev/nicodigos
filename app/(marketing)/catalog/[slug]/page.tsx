@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  IconBolt,
-  IconChevronRight,
-  IconClock,
-} from "@tabler/icons-react";
+import { IconBolt, IconChevronRight, IconClock } from "@tabler/icons-react";
 
 import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductStoreActions } from "@/components/store/product-store-actions";
 import { ProductDetailsTabs } from "@/components/store/product-tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatMoney } from "@/lib/currency/format";
 import { getOptionalStoreSession } from "@/lib/store/auth";
 import { storeRoutes } from "@/lib/store/navigation";
+import { resolveProductSeoMetadata } from "@/lib/seo/product";
 import { getStorefrontProductBySlug } from "@/lib/store/products/queries";
 import { isProductInWishlist } from "@/lib/store/wishlist/queries";
 import { cn } from "@/lib/utils";
@@ -51,10 +45,7 @@ export async function generateMetadata({
     return { title: "Producto no encontrado" };
   }
 
-  return {
-    title: product.name,
-    description: `${product.name} — ${product.platform}. Entrega digital en Chile.`,
-  };
+  return resolveProductSeoMetadata(product, product.seoMetadata);
 }
 
 function MetaList({ label, items }: { label: string; items: string[] }) {
@@ -99,7 +90,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="absolute bottom-[20%] left-[-15%] -z-10 h-[500px] w-[500px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative z-10 space-y-6">
-        
         {/* Breadcrumb Navigation */}
         <nav
           aria-label="Breadcrumb"
@@ -113,7 +103,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Link>
           {product.category ? (
             <>
-              <IconChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
+              <IconChevronRight
+                className="size-3.5 shrink-0 text-muted-foreground/50"
+                aria-hidden
+              />
               <Link
                 href={storeRoutes.category(product.category.slug)}
                 className="hover:text-foreground transition-colors font-medium"
@@ -122,12 +115,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </Link>
             </>
           ) : null}
-          <IconChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
-          <span className="line-clamp-1 text-foreground font-semibold max-w-[200px] sm:max-w-none">{product.name}</span>
+          <IconChevronRight
+            className="size-3.5 shrink-0 text-muted-foreground/50"
+            aria-hidden
+          />
+          <span className="line-clamp-1 text-foreground font-semibold max-w-[200px] sm:max-w-none">
+            {product.name}
+          </span>
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
-          
           {/* Gallery component */}
           <div className="space-y-4">
             <ProductGallery
@@ -157,7 +154,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </Badge>
                 ) : null}
                 {product.isPreorder ? (
-                  <Badge variant="secondary" className="font-semibold text-[10px] tracking-wider uppercase px-2 py-0.5 bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+                  <Badge
+                    variant="secondary"
+                    className="font-semibold text-[10px] tracking-wider uppercase px-2 py-0.5 bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
+                  >
                     <IconClock className="size-3 mr-0.5" />
                     Preventa
                   </Badge>
@@ -178,8 +178,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* Buy Card */}
             <Card className="bg-card border border-border/80 shadow-lg dark:shadow-2xl overflow-hidden">
               <div className="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 px-6 py-4 border-b border-border/40 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Precio de venta</span>
-                
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Precio de venta
+                </span>
+
                 {/* Custom stock status with pulsing dot */}
                 {product.qty > 0 ? (
                   <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
@@ -187,7 +189,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     </span>
-                    <span>{product.qty} Disponible{product.qty === 1 ? "" : "s"}</span>
+                    <span>
+                      {product.qty} Disponible{product.qty === 1 ? "" : "s"}
+                    </span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
@@ -204,7 +208,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </div>
                   {product.isPreorder ? (
                     <p className="text-xs text-indigo-500 font-semibold">
-                      * Este producto es una preventa y se entregará al lanzamiento oficial.
+                      * Este producto es una preventa y se entregará al
+                      lanzamiento oficial.
                     </p>
                   ) : null}
                 </div>
@@ -213,13 +218,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   productId={product.id}
                   inWishlist={inWishlist}
                 />
-                
+
                 <div className="rounded-xl bg-muted/40 p-3.5 border border-border/30 text-xs text-muted-foreground/90 space-y-1">
                   <div className="font-bold text-foreground flex items-center gap-1.5">
                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Entrega Digital Instantánea
                   </div>
-                  <p>Recibirás tu código de activación e instrucciones directamente en tu cuenta y correo una vez completado el pago.</p>
+                  <p>
+                    Recibirás tu código de activación e instrucciones
+                    directamente en tu cuenta y correo una vez completado el
+                    pago.
+                  </p>
                 </div>
               </CardContent>
             </Card>

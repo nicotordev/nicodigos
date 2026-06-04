@@ -1,4 +1,6 @@
 import prisma from "@/lib/prisma";
+import type { SeoMetadataDocument } from "@/lib/seo/metadata";
+import { seoMetadataFromRelation } from "@/lib/seo/metadata";
 import type { KinguinSystemRequirement } from "@/types/kinguin";
 
 export type StorefrontProductImage = {
@@ -42,6 +44,7 @@ export type StorefrontProductDetail = {
     name: string;
     slug: string;
   } | null;
+  seoMetadata: SeoMetadataDocument | null;
 };
 
 function parseSystemRequirements(value: unknown): KinguinSystemRequirement[] {
@@ -106,6 +109,11 @@ export async function getStorefrontProductBySlug(
           slug: true,
         },
       },
+      seoMetadata: {
+        select: {
+          document: true,
+        },
+      },
     },
   });
 
@@ -138,5 +146,6 @@ export async function getStorefrontProductBySlug(
     images: product.images,
     videos: product.videos,
     category: product.category,
+    seoMetadata: seoMetadataFromRelation(product.seoMetadata),
   };
 }

@@ -115,7 +115,7 @@ export function ProductDetailsTabs({
       {hasDescription && (
         <TabsContent value="description" className="outline-none focus:outline-none">
           <div
-            className="product-description max-w-none text-sm leading-relaxed text-muted-foreground/90 bg-card/40 border border-border/50 rounded-2xl p-6 sm:p-8 [&_h2]:mb-2.5 [&_h2]:mt-5 [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-foreground [&_li]:mb-1.5 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 shadow-sm"
+            className="product-description max-w-none text-sm leading-relaxed text-muted-foreground/90 bg-card border border-border/80 rounded-2xl p-6 sm:p-8 [&_h2]:mb-2.5 [&_h2]:mt-5 [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-foreground [&_li]:mb-1.5 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 shadow-md"
             dangerouslySetInnerHTML={{ __html: description }}
           />
         </TabsContent>
@@ -126,7 +126,7 @@ export function ProductDetailsTabs({
           {activationDetails && (
             <div className="space-y-3">
               <h3 className="font-heading text-lg font-bold text-foreground">Instrucciones de Activación</h3>
-              <div className="text-sm leading-relaxed text-muted-foreground/90 whitespace-pre-line bg-card/40 border border-border/50 rounded-2xl p-6 sm:p-8 shadow-sm">
+              <div className="text-sm leading-relaxed text-muted-foreground/90 whitespace-pre-line bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-md">
                 {activationDetails}
               </div>
             </div>
@@ -152,7 +152,7 @@ export function ProductDetailsTabs({
         <TabsContent value="requirements" className="outline-none focus:outline-none">
           <div className="grid gap-6 md:grid-cols-2">
             {systemRequirements.map((block) => (
-              <Card key={block.system} className="glass-card border-border/80 shadow-sm">
+              <Card key={block.system} className="bg-card border border-border/80 shadow-md">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-extrabold text-foreground">
                     {block.system}
@@ -174,7 +174,7 @@ export function ProductDetailsTabs({
       <TabsContent value="faq" className="outline-none focus:outline-none">
         <div className="max-w-3xl mx-auto space-y-4">
           <h3 className="font-heading text-lg font-bold text-foreground mb-4">Preguntas Frecuentes sobre Activación</h3>
-          <Accordion type="single" collapsible className="w-full bg-card/40 border border-border/60 rounded-2xl shadow-sm">
+          <Accordion type="single" collapsible className="w-full bg-card border border-border/80 rounded-2xl shadow-md">
             <AccordionItem value="item-1">
               <AccordionTrigger className="text-sm font-bold text-foreground">¿Cómo recibiré mi código de producto?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
