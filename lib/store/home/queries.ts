@@ -23,6 +23,13 @@ const inStockWhere = {
   qty: { gt: 0 },
 } as const;
 
+function shuffleArray<T>(array: T[]): void {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 async function findProductCards(
   where: Prisma.ProductWhereInput,
   limit: number,
@@ -31,10 +38,25 @@ async function findProductCards(
     where,
     orderBy: [{ updatedAt: "desc" }],
     take: limit,
-    select: productCardSelect,
+    select: {
+      ...productCardSelect,
+      updatedAt: true,
+    },
   });
 
-  return products.map(mapStorefrontProductCard);
+  const cards = products.map((p) =>
+    mapStorefrontProductCard(p as Parameters<typeof mapStorefrontProductCard>[0]),
+  );
+
+  if (products.length > 1) {
+    const firstTime = products[0].updatedAt.getTime();
+    const allSame = products.every((p) => p.updatedAt.getTime() === firstTime);
+    if (allSame) {
+      shuffleArray(cards);
+    }
+  }
+
+  return cards;
 }
 
 async function getHeroProducts(): Promise<StorefrontProductCard[]> {
