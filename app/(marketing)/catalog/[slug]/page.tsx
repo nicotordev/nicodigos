@@ -73,6 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const highlights = buildProductHighlights(product);
   const inStock = product.qty > 0 || product.isPreorder;
   const primaryVideo = product.videos[0] ?? null;
+  const primaryCategory = product.categories[0] ?? null;
 
   return (
     <main className="flex-1 bg-background">
@@ -87,17 +88,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
           >
             Catálogo
           </Link>
-          {product.category ? (
+          {primaryCategory ? (
             <>
               <IconChevronRight
                 className="size-3.5 shrink-0 text-muted-foreground/50"
                 aria-hidden
               />
               <Link
-                href={storeRoutes.category(product.category.slug)}
+                href={storeRoutes.category(primaryCategory.slug)}
                 className="hover:text-foreground transition-colors font-medium"
               >
-                {product.category.name}
+                {primaryCategory.name}
               </Link>
             </>
           ) : null}

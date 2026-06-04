@@ -39,6 +39,34 @@ export type KinguinSearchPayload = {
   searchMode: KinguinSearchMode;
 };
 
+export type BulkKinguinImportItem = {
+  productId: string;
+  name?: string;
+};
+
+export type BulkKinguinImportError = {
+  id: string;
+  name: string;
+  error: string;
+};
+
+export type BulkKinguinImportSuccess = {
+  kinguinProductId: string;
+  productId: string;
+  slug: string;
+};
+
+export type BulkKinguinImportPayload = {
+  requestedCount: number;
+  successCount: number;
+  concurrency: number;
+  batchSize: number;
+  batchCount: number;
+  batchConcurrency: number;
+  imported: BulkKinguinImportSuccess[];
+  errors: BulkKinguinImportError[];
+};
+
 export type AdminProductActionResult<T = void> =
   | { success: true; data: T; message?: string }
   | { success: false; error: string };

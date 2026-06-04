@@ -22,6 +22,8 @@ import {
 } from "@/lib/admin/products/kinguin-search";
 import type {
   AdminProductActionResult,
+  BulkKinguinImportItem,
+  BulkKinguinImportPayload,
   KinguinSearchPayload,
   KinguinSearchResultItem,
 } from "@/lib/admin/products/types";
@@ -34,6 +36,10 @@ import { isOpenAIConfigured } from "@/lib/openai/env";
 import { translateAndImproveKinguinProduct } from "@/lib/admin/products/kinguin-translate";
 
 const MIN_SEARCH_LENGTH = 3;
+const BULK_IMPORT_CONCURRENCY = 3;
+const BULK_IMPORT_AI_CONCURRENCY = 2;
+const BULK_IMPORT_BATCH_SIZE = 100;
+const BULK_IMPORT_BATCH_CONCURRENCY = 2;
 
 function kinguinNotConfiguredError(): AdminProductActionResult<never> {
   return {
@@ -62,56 +68,18 @@ function mapSearchResult(
   };
 }
 
-export async function searchKinguinProductsAction(
-  name: string,
-): Promise<AdminProductActionResult<KinguinSearchPayload>> {
-  await requireAdmin();
-
-  if (!isKinguinConfigured()) {
-    return kinguinNotConfiguredError();
+function revalidateProductImportPaths(product?: { id: string }) {
+  revalidatePath("/admin/products");
+  if (product) {
+    revalidatePath(`/admin/products/${product.id}/edit`);
   }
-
-  const query = name.trim();
-  if (query.length < MIN_SEARCH_LENGTH) {
-    return {
-      success: false,
-      error: `Escribe al menos ${MIN_SEARCH_LENGTH} caracteres para buscar.`,
-    };
-  }
-
-  try {
-    const result = await fetchAllKinguinProductsByName(query);
-    const { products, fromCache } = result;
-    const imported = await getImportedKinguinIds(
-      products.map((item) => item.kinguinId),
-      products.map((item) => item.productId),
-    );
-
-    const items = products.map((item) => mapSearchResult(item, imported));
-
-    return {
-      success: true,
-      data: {
-        items,
-        total: items.length,
-        fromCache,
-        searchMode: result.searchMode,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: formatKinguinError(error),
-    };
-  }
+  revalidatePath("/admin");
 }
 
-export async function importKinguinProductAction(
+async function importKinguinProduct(
   kinguinProductId: string,
   options?: { translateWithAi?: boolean },
 ): Promise<AdminProductActionResult<{ productId: string; slug: string }>> {
-  await requireAdmin();
-
   if (!isKinguinConfigured()) {
     return kinguinNotConfiguredError();
   }
@@ -205,10 +173,6 @@ export async function importKinguinProductAction(
 
     await syncProductClpFromSourceIfNeeded(created.id, rate);
 
-    revalidatePath("/admin/products");
-    revalidatePath(`/admin/products/${created.id}/edit`);
-    revalidatePath("/admin");
-
     return {
       success: true,
       data: { productId: created.id, slug: created.slug },
@@ -218,6 +182,203 @@ export async function importKinguinProductAction(
   } catch (error) {
     return { success: false, error: formatKinguinError(error) };
   }
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+) {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(concurrency, items.length) },
+      () => runWorker(),
+    ),
+  );
+
+  return results;
+}
+
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function normalizeBulkImportItems(items: BulkKinguinImportItem[]) {
+  const seen = new Set<string>();
+  const normalized: Required<BulkKinguinImportItem>[] = [];
+
+  for (const item of items) {
+    const productId = item.productId.trim();
+    if (!productId || seen.has(productId)) continue;
+    seen.add(productId);
+    normalized.push({
+      productId,
+      name: item.name?.trim() || productId,
+    });
+  }
+
+  return normalized;
+}
+
+export async function searchKinguinProductsAction(
+  name: string,
+): Promise<AdminProductActionResult<KinguinSearchPayload>> {
+  await requireAdmin();
+
+  if (!isKinguinConfigured()) {
+    return kinguinNotConfiguredError();
+  }
+
+  const query = name.trim();
+  if (query.length < MIN_SEARCH_LENGTH) {
+    return {
+      success: false,
+      error: `Escribe al menos ${MIN_SEARCH_LENGTH} caracteres para buscar.`,
+    };
+  }
+
+  try {
+    const result = await fetchAllKinguinProductsByName(query);
+    const { products, fromCache } = result;
+    const imported = await getImportedKinguinIds(
+      products.map((item) => item.kinguinId),
+      products.map((item) => item.productId),
+    );
+
+    const items = products.map((item) => mapSearchResult(item, imported));
+
+    return {
+      success: true,
+      data: {
+        items,
+        total: items.length,
+        fromCache,
+        searchMode: result.searchMode,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatKinguinError(error),
+    };
+  }
+}
+
+export async function importKinguinProductAction(
+  kinguinProductId: string,
+  options?: { translateWithAi?: boolean },
+): Promise<AdminProductActionResult<{ productId: string; slug: string }>> {
+  await requireAdmin();
+
+  const result = await importKinguinProduct(kinguinProductId, options);
+  if (result.success) {
+    revalidateProductImportPaths({ id: result.data.productId });
+  }
+
+  return result;
+}
+
+export async function bulkImportKinguinProductsAction(
+  items: BulkKinguinImportItem[],
+  options?: { translateWithAi?: boolean },
+): Promise<AdminProductActionResult<BulkKinguinImportPayload>> {
+  await requireAdmin();
+
+  if (!isKinguinConfigured()) {
+    return kinguinNotConfiguredError();
+  }
+
+  const normalizedItems = normalizeBulkImportItems(items);
+  if (normalizedItems.length === 0) {
+    return {
+      success: false,
+      error: "Selecciona al menos un producto de Kinguin.",
+    };
+  }
+
+  const concurrency = options?.translateWithAi
+    ? BULK_IMPORT_AI_CONCURRENCY
+    : BULK_IMPORT_CONCURRENCY;
+  const batches = chunkArray(normalizedItems, BULK_IMPORT_BATCH_SIZE);
+  const batchConcurrency = Math.min(BULK_IMPORT_BATCH_CONCURRENCY, batches.length);
+
+  const batchResults = await runWithConcurrency(
+    batches,
+    batchConcurrency,
+    async (batch) => {
+      return runWithConcurrency(batch, concurrency, async (item) => {
+        const result = await importKinguinProduct(item.productId, options);
+
+        if (!result.success) {
+          return {
+            success: false as const,
+            id: item.productId,
+            name: item.name,
+            error: result.error,
+          };
+        }
+
+        return {
+          success: true as const,
+          kinguinProductId: item.productId,
+          productId: result.data.productId,
+          slug: result.data.slug,
+        };
+      });
+    },
+  );
+  const results = batchResults.flat();
+
+  const imported = results
+    .filter((result) => result.success)
+    .map((result) => ({
+      kinguinProductId: result.kinguinProductId,
+      productId: result.productId,
+      slug: result.slug,
+    }));
+
+  const errors = results
+    .filter((result) => !result.success)
+    .map((result) => ({
+      id: result.id,
+      name: result.name,
+      error: result.error,
+    }));
+
+  revalidateProductImportPaths();
+
+  return {
+    success: true,
+    data: {
+      requestedCount: normalizedItems.length,
+      successCount: imported.length,
+      concurrency,
+      batchSize: BULK_IMPORT_BATCH_SIZE,
+      batchCount: batches.length,
+      batchConcurrency,
+      imported,
+      errors,
+    },
+    message:
+      errors.length > 0
+        ? `Se importaron ${imported.length} productos. ${errors.length} fallaron.`
+        : `Se importaron ${imported.length} productos.`,
+  };
 }
 
 export async function updateProductAction(
@@ -376,7 +537,7 @@ export async function bulkUpdateProductsAction(
       data: undefined,
       message: `${productIds.length} productos actualizados.`,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: "Error al realizar la actualización masiva.",

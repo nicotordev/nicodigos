@@ -41,10 +41,10 @@ export type StorefrontProductDetail = {
   systemRequirements: KinguinSystemRequirement[];
   images: StorefrontProductImage[];
   videos: StorefrontProductVideo[];
-  category: {
+  categories: {
     name: string;
     slug: string;
-  } | null;
+  }[];
   seoMetadata: SeoMetadataDocument | null;
 };
 
@@ -104,7 +104,7 @@ export async function getStorefrontProductBySlug(
           title: true,
         },
       },
-      category: {
+      categories: {
         select: {
           name: true,
           slug: true,
@@ -146,7 +146,7 @@ export async function getStorefrontProductBySlug(
     systemRequirements: parseSystemRequirements(product.systemRequirements),
     images: product.images,
     videos: product.videos,
-    category: product.category,
+    categories: product.categories,
     seoMetadata: seoMetadataFromRelation(product.seoMetadata),
   };
 }

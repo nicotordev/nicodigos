@@ -171,6 +171,74 @@ export function CatalogFiltersBar({
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Género</Label>
+                  <Select
+                    value={filters.genre || "all"}
+                    onValueChange={(value) =>
+                      onChange({ genre: value === "all" ? "" : value, page: 1 })
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los géneros</SelectItem>
+                      {options.genres.map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {g}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Etiqueta (Tag)</Label>
+                  <Select
+                    value={filters.tag || "all"}
+                    onValueChange={(value) =>
+                      onChange({ tag: value === "all" ? "" : value, page: 1 })
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las etiquetas</SelectItem>
+                      {options.tags.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Rango de Precio</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Mín ($)"
+                      value={filters.minPrice}
+                      onChange={(e) => onChange({ minPrice: e.target.value, page: 1 })}
+                      disabled={isLoading}
+                      className="h-10 text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Máx ($)"
+                      value={filters.maxPrice}
+                      onChange={(e) => onChange({ maxPrice: e.target.value, page: 1 })}
+                      disabled={isLoading}
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">Ordenar</Label>
                   <Select
                     value={filters.sort}
@@ -283,6 +351,46 @@ export function CatalogFiltersBar({
                 <IconX className="size-3" />
               </Badge>
             )}
+            {filters.genre && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                onClick={() => onChange({ genre: "", page: 1 })}
+              >
+                <span>Género: {filters.genre}</span>
+                <IconX className="size-3" />
+              </Badge>
+            )}
+            {filters.tag && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                onClick={() => onChange({ tag: "", page: 1 })}
+              >
+                <span>Tag: {filters.tag}</span>
+                <IconX className="size-3" />
+              </Badge>
+            )}
+            {filters.minPrice && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                onClick={() => onChange({ minPrice: "", page: 1 })}
+              >
+                <span>Min: ${Number(filters.minPrice).toLocaleString("es-CL")}</span>
+                <IconX className="size-3" />
+              </Badge>
+            )}
+            {filters.maxPrice && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                onClick={() => onChange({ maxPrice: "", page: 1 })}
+              >
+                <span>Max: ${Number(filters.maxPrice).toLocaleString("es-CL")}</span>
+                <IconX className="size-3" />
+              </Badge>
+            )}
             {filters.offersOnly && (
               <Badge
                 variant="secondary"
@@ -344,8 +452,8 @@ export function CatalogFiltersBar({
           ) : null}
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-4 space-y-1.5">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="space-y-1.5">
             <Label htmlFor="catalog-search" className="text-xs font-semibold">
               Buscar
             </Label>
@@ -359,111 +467,177 @@ export function CatalogFiltersBar({
                 value={searchDraft}
                 onChange={(event) => setSearchDraft(event.target.value)}
                 placeholder="Steam, gift card, FIFA…"
-                className="pl-8"
+                className="pl-8 h-10"
                 disabled={isLoading}
               />
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Categoría</Label>
-              <Select
-                value={filters.category || "all"}
-                onValueChange={(value) =>
-                  onChange({ category: value === "all" ? "" : value, page: 1 })
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las categorías</SelectItem>
-                  {options.categories.map((category) => (
-                    <SelectItem key={category.id} value={category.slug}>
-                      {category.name} ({category.productCount})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Categoría</Label>
+            <Select
+              value={filters.category || "all"}
+              onValueChange={(value) =>
+                onChange({ category: value === "all" ? "" : value, page: 1 })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {options.categories.map((category) => (
+                  <SelectItem key={category.id} value={category.slug}>
+                    {category.name} ({category.productCount})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Plataforma</Label>
-              <Select
-                value={filters.platform || "all"}
-                onValueChange={(value) =>
-                  onChange({ platform: value === "all" ? "" : value, page: 1 })
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las plataformas</SelectItem>
-                  {options.platforms.map((platform) => {
-                    const { label } = getPlatformIconConfig(platform);
-                    return (
-                      <SelectItem key={platform} value={platform}>
-                        {label}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Ordenar</Label>
-              <Select
-                value={filters.sort}
-                onValueChange={(value) =>
-                  onChange({
-                    sort: value as CatalogFilters["sort"],
-                    page: 1,
-                  })
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATALOG_SORT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Plataforma</Label>
+            <Select
+              value={filters.platform || "all"}
+              onValueChange={(value) =>
+                onChange({ platform: value === "all" ? "" : value, page: 1 })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las plataformas</SelectItem>
+                {options.platforms.map((platform) => {
+                  const { label } = getPlatformIconConfig(platform);
+                  return (
+                    <SelectItem key={platform} value={platform}>
+                      {label}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Por página</Label>
-              <Select
-                value={String(filters.pageSize)}
-                onValueChange={(value) =>
-                  onChange({
-                    pageSize: Number(value) as CatalogFilters["pageSize"],
-                    page: 1,
-                  })
-                }
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Ordenar por</Label>
+            <Select
+              value={filters.sort}
+              onValueChange={(value) =>
+                onChange({
+                  sort: value as CatalogFilters["sort"],
+                  page: 1,
+                })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATALOG_SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Género</Label>
+            <Select
+              value={filters.genre || "all"}
+              onValueChange={(value) =>
+                onChange({ genre: value === "all" ? "" : value, page: 1 })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los géneros</SelectItem>
+                {options.genres.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Etiqueta (Tag)</Label>
+            <Select
+              value={filters.tag || "all"}
+              onValueChange={(value) =>
+                onChange({ tag: value === "all" ? "" : value, page: 1 })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las etiquetas</SelectItem>
+                {options.tags.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Rango de Precio</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Mín ($)"
+                value={filters.minPrice}
+                onChange={(e) => onChange({ minPrice: e.target.value, page: 1 })}
                 disabled={isLoading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATALOG_PAGE_SIZE_OPTIONS.map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size} productos
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="h-10 text-sm"
+              />
+              <Input
+                type="number"
+                placeholder="Máx ($)"
+                value={filters.maxPrice}
+                onChange={(e) => onChange({ maxPrice: e.target.value, page: 1 })}
+                disabled={isLoading}
+                className="h-10 text-sm"
+              />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Por página</Label>
+            <Select
+              value={String(filters.pageSize)}
+              onValueChange={(value) =>
+                onChange({
+                  pageSize: Number(value) as CatalogFilters["pageSize"],
+                  page: 1,
+                })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATALOG_PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size} productos
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

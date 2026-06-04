@@ -6,9 +6,11 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { IconPackage, IconSearch } from "@tabler/icons-react";
 import {
+  bulkImportKinguinProductsAction,
   importKinguinProductAction,
   searchKinguinProductsAction,
 } from "@/lib/admin/products/actions";
+import type { BulkKinguinImportError } from "@/lib/admin/products/types";
 import type { KinguinSearchResultItem } from "@/lib/admin/products/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatSourceMoney } from "@/lib/admin/format";
@@ -44,6 +46,11 @@ type CreateProductFromKinguinFormProps = {
   openAiConfigured: boolean;
 };
 
+const BULK_IMPORT_CONCURRENCY = 3;
+const BULK_IMPORT_AI_CONCURRENCY = 2;
+const BULK_IMPORT_BATCH_SIZE = 100;
+const BULK_IMPORT_BATCH_CONCURRENCY = 2;
+
 export function CreateProductFromKinguinForm({
   kinguinConfigured,
   openAiConfigured,
@@ -70,7 +77,7 @@ export function CreateProductFromKinguinForm({
     total: number;
     currentName: string;
     successCount: number;
-    errors: { id: string; name: string; error: string }[];
+    errors: BulkKinguinImportError[];
   } | null>(null);
 
   function handleSearch(event: React.FormEvent<HTMLFormElement>) {
@@ -164,86 +171,123 @@ export function CreateProductFromKinguinForm({
 
   async function handleBulkImport() {
     if (selectedIds.length === 0) return;
+
+    const itemsToImport = selectedIds.map((productId) => {
+      const item = results.find((result) => result.productId === productId);
+      return {
+        productId,
+        name: item?.name ?? productId,
+      };
+    });
+    const estimatedConcurrency = translateWithAi
+      ? BULK_IMPORT_AI_CONCURRENCY
+      : BULK_IMPORT_CONCURRENCY;
+    const batchCount = Math.ceil(itemsToImport.length / BULK_IMPORT_BATCH_SIZE);
+    const estimatedTotalConcurrency =
+      estimatedConcurrency * Math.min(BULK_IMPORT_BATCH_CONCURRENCY, batchCount);
+
     setError(null);
     setSuccess(null);
     setImportedProductId(null);
     setIsBulkImporting(true);
+    setBulkImportProgress({
+      current: 0,
+      total: itemsToImport.length,
+      currentName: `${batchCount} batch${
+        batchCount === 1 ? "" : "es"
+      } de hasta ${BULK_IMPORT_BATCH_SIZE}`,
+      successCount: 0,
+      errors: [],
+    });
 
     const toastId = "bulk-import";
-    toast.loading(`Iniciando importación masiva (0 de ${selectedIds.length})...`, { id: toastId });
-
-    const errors: { id: string; name: string; error: string }[] = [];
-    let successCount = 0;
-    const total = selectedIds.length;
-
-    for (let i = 0; i < total; i++) {
-      const productId = selectedIds[i];
-      const item = results.find((r) => r.productId === productId);
-      const name = item ? item.name : productId;
-
-      setBulkImportProgress({
-        current: i + 1,
-        total,
-        currentName: name,
-        successCount,
-        errors: [...errors],
-      });
-
-      toast.loading(`Importando ${i + 1} de ${total}: ${name}...`, { id: toastId });
-
-      try {
-        const result = await importKinguinProductAction(productId, {
-          translateWithAi,
-        });
-
-        if (!result.success) {
-          errors.push({
-            id: productId,
-            name,
-            error: result.error || "Error desconocido",
-          });
-        } else {
-          successCount++;
-        }
-      } catch (err) {
-        errors.push({
-          id: productId,
-          name,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-    }
-
-    setIsBulkImporting(false);
-    setBulkImportProgress(null);
-    setSelectedIds([]);
-
-    if (errors.length > 0) {
-      setError(
-        `Se importaron ${successCount} productos con éxito. ${errors.length} fallaron:\n` +
-          errors.map((e) => `- ${e.name}: ${e.error}`).join("\n")
-      );
-      toast.error(`Importación masiva completada: ${successCount} éxito, ${errors.length} fallaron.`, { id: toastId });
-    } else {
-      setSuccess(
-        `¡Todos los ${successCount} productos fueron importados con éxito!`
-      );
-      toast.success(`¡Todos los ${successCount} productos importados con éxito!`, { id: toastId });
-    }
-
-    setResults((prev) =>
-      prev.map((item) => {
-        if (
-          selectedIds.includes(item.productId) &&
-          !errors.some((e) => e.id === item.productId)
-        ) {
-          return { ...item, alreadyImported: true };
-        }
-        return item;
-      })
+    toast.loading(
+      `Importando ${itemsToImport.length} productos en ${batchCount} batch${
+        batchCount === 1 ? "" : "es"
+      } con concurrencia total ${estimatedTotalConcurrency}...`,
+      { id: toastId },
     );
 
-    router.refresh();
+    try {
+      const result = await bulkImportKinguinProductsAction(itemsToImport, {
+        translateWithAi,
+      });
+
+      if (!result.success) {
+        setError(result.error);
+        toast.error(`Error al importar: ${result.error}`, { id: toastId });
+        return;
+      }
+
+      const {
+        batchConcurrency,
+        batchCount: completedBatchCount,
+        batchSize,
+        concurrency,
+        errors,
+        imported,
+        requestedCount,
+        successCount,
+      } = result.data;
+      const importedKinguinProductIds = new Set(
+        imported.map((item) => item.kinguinProductId),
+      );
+
+      setBulkImportProgress({
+        current: requestedCount,
+        total: itemsToImport.length,
+        currentName: `Finalizado en ${completedBatchCount} batch${
+          completedBatchCount === 1 ? "" : "es"
+        } de ${batchSize} con ${batchConcurrency} batch${
+          batchConcurrency === 1 ? "" : "es"
+        } simultáneo${batchConcurrency === 1 ? "" : "s"}`,
+        successCount,
+        errors,
+      });
+
+      if (errors.length > 0) {
+        setError(
+          `Se importaron ${successCount} productos con éxito. ${errors.length} fallaron:\n` +
+            errors.map((e) => `- ${e.name}: ${e.error}`).join("\n"),
+        );
+        toast.error(
+          `Importación masiva completada: ${successCount} éxito, ${errors.length} fallaron.`,
+          { id: toastId },
+        );
+      } else {
+        setSuccess(
+          `¡Todos los ${successCount} productos fueron importados con éxito!`,
+        );
+        toast.success(
+          `¡${successCount} productos importados en ${completedBatchCount} batch${
+            completedBatchCount === 1 ? "" : "es"
+          } con concurrencia total ${concurrency * batchConcurrency}!`,
+          { id: toastId },
+        );
+      }
+
+      setResults((prev) =>
+        prev.map((item) => {
+          if (importedKinguinProductIds.has(item.productId)) {
+            return { ...item, alreadyImported: true };
+          }
+          return item;
+        }),
+      );
+
+      setSelectedIds((prev) =>
+        prev.filter((id) => !importedKinguinProductIds.has(id)),
+      );
+
+      router.refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      toast.error(`Error al importar: ${msg}`, { id: toastId });
+    } finally {
+      setIsBulkImporting(false);
+      setBulkImportProgress(null);
+    }
   }
 
   if (!kinguinConfigured) {
@@ -347,13 +391,22 @@ export function CreateProductFromKinguinForm({
               Importando productos en masa...
             </CardTitle>
             <CardDescription>
-              Progreso: {bulkImportProgress.current} de {bulkImportProgress.total}
+              Progreso: {bulkImportProgress.current} de{" "}
+              {bulkImportProgress.total}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm space-y-3">
             <p className="font-medium text-foreground">
-              Procesando: <span className="text-primary font-semibold">{bulkImportProgress.currentName}</span>
+              Procesando:{" "}
+              <span className="text-primary font-semibold">
+                {bulkImportProgress.currentName}
+              </span>
             </p>
+            {bulkImportProgress.successCount > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Importados: {bulkImportProgress.successCount}
+              </p>
+            ) : null}
             {bulkImportProgress.errors.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-destructive">
