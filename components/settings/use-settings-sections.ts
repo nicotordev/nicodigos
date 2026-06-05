@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   saveAddressesSettingsAction,
   saveAppPreferencesAction,
@@ -22,7 +22,9 @@ function getSectionValue(
 
 export function useSettingsSections(initialData: SettingsInitialData) {
   const router = useRouter();
-  const savedRef = useRef(structuredClone(initialData));
+  const [savedSnapshot, setSavedSnapshot] = useState(
+    structuredClone(initialData),
+  );
   const [data, setData] = useState(initialData);
   const [savingSection, setSavingSection] =
     useState<SettingsSaveSection | null>(null);
@@ -36,26 +38,29 @@ export function useSettingsSections(initialData: SettingsInitialData) {
   const isSectionDirty = useCallback(
     (section: SettingsSaveSection) =>
       JSON.stringify(getSectionValue(data, section)) !==
-      JSON.stringify(getSectionValue(savedRef.current, section)),
-    [data],
+      JSON.stringify(getSectionValue(savedSnapshot, section)),
+    [data, savedSnapshot],
   );
 
-  const cancelSection = useCallback((section: SettingsSaveSection) => {
-    setData((current) => ({
-      ...current,
-      [section]: structuredClone(savedRef.current[section]),
-    }));
-    setSectionErrors((prev) => {
-      const next = { ...prev };
-      delete next[section];
-      return next;
-    });
-    setSectionMessages((prev) => {
-      const next = { ...prev };
-      delete next[section];
-      return next;
-    });
-  }, []);
+  const cancelSection = useCallback(
+    (section: SettingsSaveSection) => {
+      setData((current) => ({
+        ...current,
+        [section]: structuredClone(savedSnapshot[section]),
+      }));
+      setSectionErrors((prev) => {
+        const next = { ...prev };
+        delete next[section];
+        return next;
+      });
+      setSectionMessages((prev) => {
+        const next = { ...prev };
+        delete next[section];
+        return next;
+      });
+    },
+    [savedSnapshot],
+  );
 
   const saveSection = useCallback(
     async (section: SettingsSaveSection) => {
@@ -104,7 +109,7 @@ export function useSettingsSections(initialData: SettingsInitialData) {
         return;
       }
 
-      savedRef.current = structuredClone(result.data);
+      setSavedSnapshot(structuredClone(result.data));
       setData(result.data);
       if (result.message) {
         setSectionMessages((prev) => ({
@@ -120,7 +125,7 @@ export function useSettingsSections(initialData: SettingsInitialData) {
   return {
     data,
     setData,
-    savedSnapshot: savedRef.current,
+    savedSnapshot,
     savingSection,
     sectionMessages,
     sectionErrors,

@@ -50,6 +50,6 @@ async function main() {
   });
 }
 
-if ((import.meta as any).main) {
+if (import.meta.main) {
   main();
 }

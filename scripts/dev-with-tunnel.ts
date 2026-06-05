@@ -84,7 +84,7 @@ async function main() {
   await result;
 }
 
-if ((import.meta as any).main) {
+if (import.meta.main) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

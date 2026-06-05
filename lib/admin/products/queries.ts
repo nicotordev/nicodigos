@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import type { AdminProductListItem } from "@/lib/admin/products/types";
 
 export type AdminProductsResponse = {
@@ -14,16 +15,18 @@ export type AdminProductsResponse = {
   };
 };
 
-export async function getAdminProducts(options: {
-  page?: number;
-  limit?: number;
-  search?: string;
-} = {}): Promise<AdminProductsResponse> {
+export async function getAdminProducts(
+  options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {},
+): Promise<AdminProductsResponse> {
   const page = Math.max(1, options.page ?? 1);
   const limit = Math.max(1, options.limit ?? 50);
   const search = options.search?.trim().toLowerCase() ?? "";
 
-  const where: any = {};
+  const where: Prisma.ProductWhereInput = {};
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },

@@ -6,12 +6,16 @@ import { findKinguinOrderByExternalId } from "@/lib/store/checkout/find-kinguin-
 import {
   buildKinguinPlaceOrderProducts,
   placeKinguinOrderWithFallback,
+  type OrderItemForKinguin,
 } from "@/lib/store/checkout/kinguin-place-order";
 import prisma from "@/lib/prisma";
 import type { KinguinKey, KinguinOrder } from "@/types/kinguin";
 import { storeRoutes } from "@/lib/store/navigation";
 import { syncTransactionsForOrder } from "@/lib/transactions/on-order";
-import { getKinguinBalanceCached, updateKinguinBalanceCached } from "@/lib/kinguin/balance";
+import {
+  getKinguinBalanceCached,
+  updateKinguinBalanceCached,
+} from "@/lib/kinguin/balance";
 
 export type FulfillKinguinOrderResult = {
   status: "completed" | "processing" | "failed" | "skipped";
@@ -209,6 +213,11 @@ async function syncKeysFromKinguin(
   };
 }
 
+type FulfillmentOrderItem = OrderItemForKinguin & {
+  id: string;
+  kinguinId: number;
+};
+
 type FulfillmentOrder = {
   id: string;
   status: string;
@@ -217,14 +226,7 @@ type FulfillmentOrder = {
   isPreorder: boolean;
   preorderReleaseAt: Date | null;
   createdAt: Date;
-  items: Array<{
-    id: string;
-    kinguinId: number;
-    kinguinProductId: string;
-    kinguinOfferId: string;
-    quantity: number;
-    offer: { sourceCostPrice: { toString(): string } | null } | null;
-  }>;
+  items: FulfillmentOrderItem[];
 };
 
 async function claimKinguinPlacement(
@@ -271,20 +273,10 @@ async function claimKinguinPlacement(
 
 async function buildAndPlaceKinguinOrder(
   order: FulfillmentOrder,
-  items: Array<{
-    id: string;
-    kinguinId: number;
-    kinguinProductId: string;
-    kinguinOfferId: string;
-    quantity: number;
-    offer: { sourceCostPrice: any } | null;
-  }>,
+  items: FulfillmentOrderItem[],
   kinguin: ReturnType<typeof getKinguinSdk>,
 ): Promise<FulfillKinguinOrderResult> {
-  const kinguinProducts = await buildKinguinPlaceOrderProducts(
-    items,
-    kinguin,
-  );
+  const kinguinProducts = await buildKinguinPlaceOrderProducts(items, kinguin);
 
   const totalCostEur = kinguinProducts.reduce(
     (sum, p) => sum + p.price * p.qty,
@@ -322,7 +314,10 @@ async function buildAndPlaceKinguinOrder(
       updateKinguinBalanceCached(balanceRes.balance);
     })
     .catch((err) => {
-      console.error("Error refreshing balance cache after order placement:", err);
+      console.error(
+        "Error refreshing balance cache after order placement:",
+        err,
+      );
     });
 
   await syncKinguinOrderToDb(

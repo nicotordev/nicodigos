@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import {
   IconDotsVertical,
   IconEdit,
@@ -110,12 +110,14 @@ export function AdminProductsBoard({
     setQuery(search);
   }
 
-  // Debounced URL updates when typing
-  const debouncedSearch = useMemo(() => {
-    let timeoutId: any;
-    return (value: string) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
         if (value.trim()) {
           params.set("search", value.trim());
@@ -125,8 +127,9 @@ export function AdminProductsBoard({
         params.set("page", "1");
         router.push(`/admin/products?${params.toString()}`);
       }, 400);
-    };
-  }, [router]);
+    },
+    [router],
+  );
 
   const handleSearchChange = (val: string) => {
     setQuery(val);
@@ -171,9 +174,15 @@ export function AdminProductsBoard({
     return pages;
   }
 
-  const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.id));
-  const someSelected = filtered.some((p) => selectedIds.includes(p.id)) && !allSelected;
-  const headerCheckedState = allSelected ? true : someSelected ? "indeterminate" : false;
+  const allSelected =
+    filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.id));
+  const someSelected =
+    filtered.some((p) => selectedIds.includes(p.id)) && !allSelected;
+  const headerCheckedState = allSelected
+    ? true
+    : someSelected
+      ? "indeterminate"
+      : false;
 
   function goToEdit(productId: string) {
     router.push(`/admin/products/${productId}/edit`);
@@ -338,7 +347,10 @@ export function AdminProductsBoard({
                       )}
                       onClick={() => goToEdit(product.id)}
                     >
-                      <TableCell className="w-12 pl-6" onClick={(e) => e.stopPropagation()}>
+                      <TableCell
+                        className="w-12 pl-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={(checked) => {
@@ -493,12 +505,20 @@ export function AdminProductsBoard({
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  Mostrando página <span className="font-semibold text-foreground">{page}</span> de{" "}
-                  <span className="font-semibold text-foreground">{totalPages}</span> ({total} productos en total)
+                  Mostrando página{" "}
+                  <span className="font-semibold text-foreground">{page}</span>{" "}
+                  de{" "}
+                  <span className="font-semibold text-foreground">
+                    {totalPages}
+                  </span>{" "}
+                  ({total} productos en total)
                 </p>
               </div>
               <div>
-                <nav className="isolate inline-flex -space-x-px rounded-full shadow-xs" aria-label="Pagination">
+                <nav
+                  className="isolate inline-flex -space-x-px rounded-full shadow-xs"
+                  aria-label="Pagination"
+                >
                   <Button
                     variant="outline"
                     className="rounded-l-full px-3 h-9"
@@ -508,7 +528,7 @@ export function AdminProductsBoard({
                     <IconChevronLeft className="size-4" />
                     <span className="sr-only">Anterior</span>
                   </Button>
-                  
+
                   {getPageNumbers().map((p, idx) => {
                     if (p === -1) {
                       return (

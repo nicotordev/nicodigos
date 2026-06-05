@@ -23,6 +23,7 @@
     }
   },
   "include": [
+    "bun.d.ts",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",

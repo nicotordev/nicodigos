@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +26,20 @@ import { ADDRESS_TYPE_LABELS, COUNTRY_OPTIONS } from "@/lib/settings/constants";
 import type { AddressType, UserAddress } from "@/lib/settings/types";
 
 export type AddressFormValues = Omit<UserAddress, "id" | "isDefault">;
+
+function addressToFormValues(address: UserAddress): AddressFormValues {
+  return {
+    type: address.type,
+    label: address.label,
+    country: address.country,
+    region: address.region,
+    city: address.city,
+    commune: address.commune,
+    street: address.street,
+    unit: address.unit,
+    postalCode: address.postalCode,
+  };
+}
 
 const emptyAddressForm = (type: AddressType): AddressFormValues => ({
   type,
@@ -55,40 +69,18 @@ export function AddressEditorSheet({
   onSave,
 }: AddressEditorSheetProps) {
   const formId = useId();
-  const [form, setForm] = useState<AddressFormValues>(
-    address
-      ? {
-          type: address.type,
-          label: address.label,
-          country: address.country,
-          region: address.region,
-          city: address.city,
-          commune: address.commune,
-          street: address.street,
-          unit: address.unit,
-          postalCode: address.postalCode,
-        }
-      : emptyAddressForm(defaultType),
+  const [form, setForm] = useState<AddressFormValues>(() =>
+    address ? addressToFormValues(address) : emptyAddressForm(defaultType),
   );
 
-  useEffect(() => {
-    if (!open) return;
-    setForm(
-      address
-        ? {
-            type: address.type,
-            label: address.label,
-            country: address.country,
-            region: address.region,
-            city: address.city,
-            commune: address.commune,
-            street: address.street,
-            unit: address.unit,
-            postalCode: address.postalCode,
-          }
-        : emptyAddressForm(defaultType),
-    );
-  }, [open, address, defaultType]);
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setForm(
+        address ? addressToFormValues(address) : emptyAddressForm(defaultType),
+      );
+    }
+    onOpenChange(nextOpen);
+  }
 
   function update<K extends keyof AddressFormValues>(
     key: K,
@@ -100,13 +92,13 @@ export function AddressEditorSheet({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSave(form, address?.id);
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   const isChile = form.country === "CL";
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="bottom"
         className="max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:max-h-[85dvh] md:side-right md:max-w-md md:rounded-none"

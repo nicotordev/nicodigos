@@ -1,6 +1,17 @@
 import "dotenv/config";
+import axios from "axios";
 import { KinguinSdk } from "../lib/kinguin/sdk/kinguin-sdk";
 import prisma from "../lib/prisma";
+
+function formatRequestError(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return JSON.stringify(error.response?.data ?? error.message);
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
 
 async function main() {
   const sdk = new KinguinSdk();
@@ -25,10 +36,12 @@ async function main() {
   try {
     const product = await sdk.getProduct(item.kinguinProductId);
     console.log("Product name:", product.name);
-    const offer = product.offers?.find(o => o.offerId === item.kinguinOfferId);
+    const offer = product.offers?.find(
+      (o) => o.offerId === item.kinguinOfferId,
+    );
     console.log("Live offer:", offer);
-  } catch (error: any) {
-    console.error("getProduct failed:", error.response?.data ?? error.message);
+  } catch (error: unknown) {
+    console.error("getProduct failed:", formatRequestError(error));
   }
 
   console.log("\nTesting with offerId (qty 3):");
@@ -46,8 +59,16 @@ async function main() {
       ],
     });
     console.log("Success with offerId:", placed);
-  } catch (error: any) {
-    console.error("Failed with offerId:", error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        "Failed with offerId:",
+        error.response?.status,
+        error.response?.data,
+      );
+    } else {
+      console.error("Failed with offerId:", formatRequestError(error));
+    }
   }
 }
 

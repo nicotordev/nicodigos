@@ -53,10 +53,12 @@ export function CatalogFiltersBar({
   className,
 }: CatalogFiltersProps) {
   const [searchDraft, setSearchDraft] = useState(filters.q);
+  const [prevQuery, setPrevQuery] = useState(filters.q);
 
-  useEffect(() => {
+  if (filters.q !== prevQuery) {
+    setPrevQuery(filters.q);
     setSearchDraft(filters.q);
-  }, [filters.q]);
+  }
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -71,7 +73,12 @@ export function CatalogFiltersBar({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Mobile view (< lg) */}
-      <div className={cn("lg:hidden flex flex-col gap-3", isLoading && "opacity-90")}>
+      <div
+        className={cn(
+          "lg:hidden flex flex-col gap-3",
+          isLoading && "opacity-90",
+        )}
+      >
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <IconSearch
@@ -89,7 +96,10 @@ export function CatalogFiltersBar({
           </div>
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" className="h-10 gap-1.5 shrink-0 relative bg-card border-border/60 font-semibold px-4 shadow-sm">
+              <Button
+                variant="outline"
+                className="h-10 gap-1.5 shrink-0 relative bg-card border-border/60 font-semibold px-4 shadow-sm"
+              >
                 <IconFilter className="size-4 text-primary" aria-hidden />
                 <span>Filtrar</span>
                 {hasActiveFilters && (
@@ -97,10 +107,15 @@ export function CatalogFiltersBar({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl p-0 flex flex-col bg-background border-t border-border">
+            <SheetContent
+              side="bottom"
+              className="max-h-[85vh] rounded-t-3xl p-0 flex flex-col bg-background border-t border-border"
+            >
               <SheetHeader className="p-5 border-b border-border/40 shrink-0">
                 <div className="flex items-center justify-between">
-                  <SheetTitle className="font-heading text-base font-bold">Filtros</SheetTitle>
+                  <SheetTitle className="font-heading text-base font-bold">
+                    Filtros
+                  </SheetTitle>
                   {hasActiveFilters && (
                     <Button
                       type="button"
@@ -119,14 +134,17 @@ export function CatalogFiltersBar({
                   Ajusta las opciones para afinar tu búsqueda en el catálogo.
                 </SheetDescription>
               </SheetHeader>
-              
+
               <div className="flex-1 overflow-y-auto p-5 space-y-5 pb-24">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">Categoría</Label>
                   <Select
                     value={filters.category || "all"}
                     onValueChange={(value) =>
-                      onChange({ category: value === "all" ? "" : value, page: 1 })
+                      onChange({
+                        category: value === "all" ? "" : value,
+                        page: 1,
+                      })
                     }
                     disabled={isLoading}
                   >
@@ -149,7 +167,10 @@ export function CatalogFiltersBar({
                   <Select
                     value={filters.platform || "all"}
                     onValueChange={(value) =>
-                      onChange({ platform: value === "all" ? "" : value, page: 1 })
+                      onChange({
+                        platform: value === "all" ? "" : value,
+                        page: 1,
+                      })
                     }
                     disabled={isLoading}
                   >
@@ -194,7 +215,9 @@ export function CatalogFiltersBar({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Etiqueta (Tag)</Label>
+                  <Label className="text-xs font-semibold">
+                    Etiqueta (Tag)
+                  </Label>
                   <Select
                     value={filters.tag || "all"}
                     onValueChange={(value) =>
@@ -217,13 +240,17 @@ export function CatalogFiltersBar({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Rango de Precio</Label>
+                  <Label className="text-xs font-semibold">
+                    Rango de Precio
+                  </Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="number"
                       placeholder="Mín ($)"
                       value={filters.minPrice}
-                      onChange={(e) => onChange({ minPrice: e.target.value, page: 1 })}
+                      onChange={(e) =>
+                        onChange({ minPrice: e.target.value, page: 1 })
+                      }
                       disabled={isLoading}
                       className="h-10 text-sm"
                     />
@@ -231,7 +258,9 @@ export function CatalogFiltersBar({
                       type="number"
                       placeholder="Máx ($)"
                       value={filters.maxPrice}
-                      onChange={(e) => onChange({ maxPrice: e.target.value, page: 1 })}
+                      onChange={(e) =>
+                        onChange({ maxPrice: e.target.value, page: 1 })
+                      }
                       disabled={isLoading}
                       className="h-10 text-sm"
                     />
@@ -290,7 +319,10 @@ export function CatalogFiltersBar({
 
                 <div className="grid grid-cols-2 gap-3 border-t border-border/40 pt-4">
                   <div className="flex items-center justify-between gap-2 bg-muted/30 border border-border/50 rounded-xl p-3">
-                    <Label htmlFor="catalog-offers-mobile" className="text-xs font-medium cursor-pointer">
+                    <Label
+                      htmlFor="catalog-offers-mobile"
+                      className="text-xs font-medium cursor-pointer"
+                    >
                       Solo ofertas
                     </Label>
                     <Switch
@@ -303,7 +335,10 @@ export function CatalogFiltersBar({
                     />
                   </div>
                   <div className="flex items-center justify-between gap-2 bg-muted/30 border border-border/50 rounded-xl p-3">
-                    <Label htmlFor="catalog-preorders-mobile" className="text-xs font-medium cursor-pointer">
+                    <Label
+                      htmlFor="catalog-preorders-mobile"
+                      className="text-xs font-medium cursor-pointer"
+                    >
                       Solo preventas
                     </Label>
                     <Switch
@@ -317,7 +352,7 @@ export function CatalogFiltersBar({
                   </div>
                 </div>
               </div>
-              
+
               <div className="absolute bottom-0 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border/65 p-4 z-50">
                 <SheetClose asChild>
                   <Button className="w-full font-bold h-11 text-sm shadow-md">
@@ -337,7 +372,11 @@ export function CatalogFiltersBar({
                 className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 onClick={() => onChange({ category: "", page: 1 })}
               >
-                <span>Cat: {options.categories.find(c => c.slug === filters.category)?.name || filters.category}</span>
+                <span>
+                  Cat:{" "}
+                  {options.categories.find((c) => c.slug === filters.category)
+                    ?.name || filters.category}
+                </span>
                 <IconX className="size-3" />
               </Badge>
             )}
@@ -347,7 +386,9 @@ export function CatalogFiltersBar({
                 className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 onClick={() => onChange({ platform: "", page: 1 })}
               >
-                <span>Plat: {getPlatformIconConfig(filters.platform).label}</span>
+                <span>
+                  Plat: {getPlatformIconConfig(filters.platform).label}
+                </span>
                 <IconX className="size-3" />
               </Badge>
             )}
@@ -377,7 +418,9 @@ export function CatalogFiltersBar({
                 className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 onClick={() => onChange({ minPrice: "", page: 1 })}
               >
-                <span>Min: ${Number(filters.minPrice).toLocaleString("es-CL")}</span>
+                <span>
+                  Min: ${Number(filters.minPrice).toLocaleString("es-CL")}
+                </span>
                 <IconX className="size-3" />
               </Badge>
             )}
@@ -387,7 +430,9 @@ export function CatalogFiltersBar({
                 className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 onClick={() => onChange({ maxPrice: "", page: 1 })}
               >
-                <span>Max: ${Number(filters.maxPrice).toLocaleString("es-CL")}</span>
+                <span>
+                  Max: ${Number(filters.maxPrice).toLocaleString("es-CL")}
+                </span>
                 <IconX className="size-3" />
               </Badge>
             )}
@@ -417,7 +462,13 @@ export function CatalogFiltersBar({
                 className="shrink-0 gap-1 pl-2.5 pr-1.5 py-1 text-[11px] rounded-full border border-border/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 onClick={() => onChange({ sort: "newest", page: 1 })}
               >
-                <span>Orden: {CATALOG_SORT_OPTIONS.find(o => o.value === filters.sort)?.label}</span>
+                <span>
+                  Orden:{" "}
+                  {
+                    CATALOG_SORT_OPTIONS.find((o) => o.value === filters.sort)
+                      ?.label
+                  }
+                </span>
                 <IconX className="size-3" />
               </Badge>
             )}
@@ -429,7 +480,7 @@ export function CatalogFiltersBar({
       <div
         className={cn(
           "hidden lg:block rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm sm:p-5",
-          isLoading && "opacity-90"
+          isLoading && "opacity-90",
         )}
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -600,7 +651,9 @@ export function CatalogFiltersBar({
                 type="number"
                 placeholder="Mín ($)"
                 value={filters.minPrice}
-                onChange={(e) => onChange({ minPrice: e.target.value, page: 1 })}
+                onChange={(e) =>
+                  onChange({ minPrice: e.target.value, page: 1 })
+                }
                 disabled={isLoading}
                 className="h-10 text-sm"
               />
@@ -608,7 +661,9 @@ export function CatalogFiltersBar({
                 type="number"
                 placeholder="Máx ($)"
                 value={filters.maxPrice}
-                onChange={(e) => onChange({ maxPrice: e.target.value, page: 1 })}
+                onChange={(e) =>
+                  onChange({ maxPrice: e.target.value, page: 1 })
+                }
                 disabled={isLoading}
                 className="h-10 text-sm"
               />
@@ -651,7 +706,10 @@ export function CatalogFiltersBar({
               }
               disabled={isLoading}
             />
-            <Label htmlFor="catalog-offers" className="text-sm font-medium cursor-pointer">
+            <Label
+              htmlFor="catalog-offers"
+              className="text-sm font-medium cursor-pointer"
+            >
               Solo ofertas
             </Label>
           </div>
@@ -664,7 +722,10 @@ export function CatalogFiltersBar({
               }
               disabled={isLoading}
             />
-            <Label htmlFor="catalog-preorders" className="text-sm font-medium cursor-pointer">
+            <Label
+              htmlFor="catalog-preorders"
+              className="text-sm font-medium cursor-pointer"
+            >
               Solo preventas
             </Label>
           </div>
