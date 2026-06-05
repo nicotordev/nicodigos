@@ -42,6 +42,7 @@ export type KinguinSearchPayload = {
 export type BulkKinguinImportItem = {
   productId: string;
   name?: string;
+  slug?: string;
 };
 
 export type BulkKinguinImportError = {

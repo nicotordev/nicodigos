@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { AdminRetryKinguinButton } from "@/components/admin/admin-retry-kinguin-button";
+import { ManualFulfillmentPanel } from "@/components/admin/manual-fulfillment-panel";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { OrderTransactionsCard } from "@/components/admin/order-transactions-card";
 import type { AdminOrderDetail } from "@/lib/admin/orders/types";
@@ -46,7 +47,15 @@ export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <OrderStatusBadge status={order.status} className="text-sm" />
-          {order.status === "PROCESSING" ? (
+          {order.needsManualFulfillment ? (
+            <Badge
+              variant="outline"
+              className="border-amber-500/40 text-amber-700 dark:text-amber-400"
+            >
+              Entrega manual
+            </Badge>
+          ) : null}
+          {order.status === "PROCESSING" && !order.needsManualFulfillment ? (
             <AdminRetryKinguinButton orderId={order.id} />
           ) : null}
         </div>
@@ -96,7 +105,11 @@ export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
 
       <OrderTransactionsCard transactions={order.transactions} />
 
-      {(order.kinguinOrderId || order.isPreorder) && (
+      <ManualFulfillmentPanel order={order} />
+
+      {(order.kinguinOrderId ||
+        order.isPreorder ||
+        order.needsManualFulfillment) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Kinguin</CardTitle>
@@ -184,8 +197,8 @@ export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
                           {key.kinguinKeyId}
                         </TableCell>
                         <TableCell>{key.status}</TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {key.serialMasked}
+                        <TableCell className="max-w-xs break-all font-mono text-xs">
+                          {key.serial}
                         </TableCell>
                       </TableRow>
                     ))}

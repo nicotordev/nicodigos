@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/admin/auth";
+import { clearManualFulfillmentPending } from "@/lib/store/checkout/manual-fulfillment";
 import {
   fulfillKinguinOrder,
   type FulfillKinguinOrderResult,
@@ -12,6 +13,8 @@ export async function retryKinguinFulfillmentAction(
   orderId: string,
 ): Promise<FulfillKinguinOrderResult> {
   await requireAdmin();
+
+  await clearManualFulfillmentPending(orderId);
 
   const result = await fulfillKinguinOrder(orderId);
 

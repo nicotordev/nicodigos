@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -78,7 +77,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const balance = await getKinguinBalanceCached();
   const hasImmediateDelivery =
-    product.sourceCostPrice != null && balance >= Number(product.sourceCostPrice);
+    product.sourceCostPrice != null && balance >= product.sourceCostPrice;
+  const deliveryMessage =
+    product.qty > 0
+      ? hasImmediateDelivery
+        ? `${product.qty} en stock — entrega al tiro`
+        : `${product.qty} en stock — entrega dentro de 24 h`
+      : "Sin stock por ahora";
+  const deliveryMessageClassName =
+    product.qty > 0
+      ? hasImmediateDelivery
+        ? "text-emerald-600 dark:text-emerald-400"
+        : "text-amber-600 dark:text-amber-500"
+      : "text-muted-foreground";
+  const activationDeliveryText = hasImmediateDelivery
+    ? "Recibes tu key o instrucciones en tu cuenta y correo apenas se confirme el pago."
+    : "Recibes tu key o instrucciones en tu cuenta y correo dentro de las próximas 24 horas tras confirmar el pago.";
 
   return (
     <main className="flex-1 bg-background">
@@ -161,21 +175,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {formatMoney(product.sellPrice)}
             </p>
 
-            {product.qty > 0 ? (
-              hasImmediateDelivery ? (
-                <p className="mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                  {product.qty} en stock — entrega al tiro
-                </p>
-              ) : (
-                <p className="mt-1 text-sm font-medium text-amber-600 dark:text-amber-500">
-                  {product.qty} en stock — entrega diferida (revisión manual)
-                </p>
-              )
-            ) : (
-              <p className="mt-1 text-sm font-medium text-muted-foreground">
-                Sin stock por ahora
-              </p>
-            )}
+            <p
+              className={`mt-1 text-sm font-medium ${deliveryMessageClassName}`}
+            >
+              {deliveryMessage}
+            </p>
 
             {descriptionPreview ? (
               <p className="mt-6 text-sm/6 text-muted-foreground">
@@ -213,9 +217,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Activación
               </h2>
               <p className="mt-4 text-sm/6 text-muted-foreground">
-                Recibes tu key o instrucciones en tu cuenta y correo apenas se
-                confirme el pago.{" "}
-                <ProductActivationDialog activationDetails={product.activationDetails} />
+                {activationDeliveryText}{" "}
+                <ProductActivationDialog
+                  activationDetails={product.activationDetails}
+                />
               </p>
             </section>
 
@@ -292,7 +297,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Sticky bottom actions bar on mobile */}
       <div className="lg:hidden fixed bottom-16 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border/80 p-4 z-40 flex items-center justify-between gap-4 shadow-lg safe-bottom">
         <div className="min-w-0">
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total</p>
+          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+            Total
+          </p>
           <p className="text-lg font-black text-primary tabular-nums">
             {formatMoney(product.sellPrice)}
           </p>

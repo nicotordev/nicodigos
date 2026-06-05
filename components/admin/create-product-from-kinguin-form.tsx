@@ -10,6 +10,7 @@ import {
   importKinguinProductAction,
   searchKinguinProductsAction,
 } from "@/lib/admin/products/actions";
+import { slugify } from "@/lib/admin/products/slugify";
 import type { BulkKinguinImportError } from "@/lib/admin/products/types";
 import type { KinguinSearchResultItem } from "@/lib/admin/products/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,6 +41,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type CreateProductFromKinguinFormProps = {
   kinguinConfigured: boolean;
@@ -64,6 +73,9 @@ export function CreateProductFromKinguinForm({
   const [fromCache, setFromCache] = useState(false);
   const [searchMode, setSearchMode] = useState<"api" | "catalog" | null>(null);
   const [importingId, setImportingId] = useState<string | null>(null);
+  const [pendingImport, setPendingImport] =
+    useState<KinguinSearchResultItem | null>(null);
+  const [importSlug, setImportSlug] = useState("");
   const [isSearching, startSearch] = useTransition();
   const [isImporting, startImport] = useTransition();
 
@@ -71,7 +83,9 @@ export function CreateProductFromKinguinForm({
   const [translateWithAi, setTranslateWithAi] = useState(openAiConfigured);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [hideAlreadyImported, setHideAlreadyImported] = useState(false);
-  const [importedProductId, setImportedProductId] = useState<string | null>(null);
+  const [importedProductId, setImportedProductId] = useState<string | null>(
+    null,
+  );
   const [bulkImportProgress, setBulkImportProgress] = useState<{
     current: number;
     total: number;
@@ -104,7 +118,15 @@ export function CreateProductFromKinguinForm({
     });
   }
 
-  function handleImport(productId: string) {
+  function openImportDialog(item: KinguinSearchResultItem) {
+    setError(null);
+    setSuccess(null);
+    setImportedProductId(null);
+    setPendingImport(item);
+    setImportSlug(slugify(item.name));
+  }
+
+  function handleImport(productId: string, slug: string) {
     setError(null);
     setSuccess(null);
     setImportedProductId(null);
@@ -117,6 +139,7 @@ export function CreateProductFromKinguinForm({
       try {
         const result = await importKinguinProductAction(productId, {
           translateWithAi,
+          slug,
         });
 
         if (!result.success) {
@@ -136,10 +159,11 @@ export function CreateProductFromKinguinForm({
               return { ...item, alreadyImported: true };
             }
             return item;
-          })
+          }),
         );
 
         setImportingId(null);
+        setPendingImport(null);
         router.refresh();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -148,6 +172,18 @@ export function CreateProductFromKinguinForm({
         setImportingId(null);
       }
     });
+  }
+
+  function handleConfirmImport() {
+    if (!pendingImport) return;
+
+    const normalizedSlug = slugify(importSlug);
+    if (!normalizedSlug) {
+      toast.error("Ingresa un slug válido.");
+      return;
+    }
+
+    handleImport(pendingImport.productId, importSlug);
   }
 
   const importableResults = results.filter((item) => !item.alreadyImported);
@@ -184,7 +220,8 @@ export function CreateProductFromKinguinForm({
       : BULK_IMPORT_CONCURRENCY;
     const batchCount = Math.ceil(itemsToImport.length / BULK_IMPORT_BATCH_SIZE);
     const estimatedTotalConcurrency =
-      estimatedConcurrency * Math.min(BULK_IMPORT_BATCH_CONCURRENCY, batchCount);
+      estimatedConcurrency *
+      Math.min(BULK_IMPORT_BATCH_CONCURRENCY, batchCount);
 
     setError(null);
     setSuccess(null);
@@ -363,7 +400,9 @@ export function CreateProductFromKinguinForm({
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
+          <AlertDescription className="whitespace-pre-line">
+            {error}
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -414,7 +453,9 @@ export function CreateProductFromKinguinForm({
                 </p>
                 <div className="max-h-24 overflow-y-auto text-xs text-muted-foreground space-y-1 rounded-md border border-border bg-card p-2">
                   {bulkImportProgress.errors.map((e) => (
-                    <p key={e.id}>• {e.name}: {e.error}</p>
+                    <p key={e.id}>
+                      • {e.name}: {e.error}
+                    </p>
                   ))}
                 </div>
               </div>
@@ -552,7 +593,8 @@ export function CreateProductFromKinguinForm({
                 </EmptyMedia>
                 <EmptyTitle>Todos importados</EmptyTitle>
                 <EmptyDescription>
-                  Todos los resultados de esta búsqueda ya están en tu catálogo local.
+                  Todos los resultados de esta búsqueda ya están en tu catálogo
+                  local.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -599,7 +641,9 @@ export function CreateProductFromKinguinForm({
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="font-medium leading-snug">{item.name}</p>
+                          <p className="font-medium leading-snug">
+                            {item.name}
+                          </p>
                           <p className="mt-1 text-sm text-muted-foreground">
                             {item.platform} · Kinguin #{item.kinguinId}
                           </p>
@@ -626,7 +670,7 @@ export function CreateProductFromKinguinForm({
                           isRowImporting ||
                           isBulkImporting
                         }
-                        onClick={() => handleImport(item.productId)}
+                        onClick={() => openImportDialog(item)}
                       >
                         {isRowImporting ? (
                           <>
@@ -645,6 +689,91 @@ export function CreateProductFromKinguinForm({
           )}
         </div>
       ) : null}
+
+      <Dialog
+        open={pendingImport != null}
+        onOpenChange={(open) => {
+          if (!open && !isImporting) {
+            setPendingImport(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importar producto</DialogTitle>
+            <DialogDescription>
+              Revisa el slug de la URL pública antes de crear el borrador local.
+            </DialogDescription>
+          </DialogHeader>
+
+          {pendingImport ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border bg-muted/20 p-3">
+                <p className="font-medium leading-snug">{pendingImport.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {pendingImport.platform} · Kinguin #{pendingImport.kinguinId}
+                </p>
+              </div>
+
+              <Field>
+                <FieldLabel htmlFor="import-slug">Slug</FieldLabel>
+                <Input
+                  id="import-slug"
+                  value={importSlug}
+                  onChange={(event) => setImportSlug(event.target.value)}
+                  placeholder="elden-ring-steam"
+                  autoComplete="off"
+                  disabled={isImporting}
+                />
+                <FieldDescription>
+                  URL: /catalog/
+                  {slugify(importSlug) || "tu-slug"}
+                </FieldDescription>
+              </Field>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="import-translate-with-ai"
+                  checked={translateWithAi}
+                  onCheckedChange={(checked) => setTranslateWithAi(!!checked)}
+                  disabled={!openAiConfigured || isImporting}
+                />
+                <label
+                  htmlFor="import-translate-with-ai"
+                  className="text-sm font-medium leading-none cursor-pointer select-none"
+                >
+                  Traducir y mejorar con IA
+                </label>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isImporting}
+              onClick={() => setPendingImport(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={isImporting || !importSlug.trim()}
+              onClick={handleConfirmImport}
+            >
+              {isImporting ? (
+                <>
+                  <Spinner className="size-4" />
+                  Importando…
+                </>
+              ) : (
+                "Importar borrador"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

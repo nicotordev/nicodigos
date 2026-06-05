@@ -11,7 +11,13 @@ import {
 import prisma from "@/lib/prisma";
 import type { KinguinKey, KinguinOrder } from "@/types/kinguin";
 import { storeRoutes } from "@/lib/store/navigation";
-import { syncTransactionsForOrder } from "@/lib/transactions/on-order";
+import {
+  completeOrderIfAllKeysDelivered,
+  countDeliveredKeysForOrder,
+  MANUAL_FULFILLMENT_CUSTOMER_MESSAGE,
+  markOrderForManualFulfillment,
+  isManualFulfillmentPending,
+} from "@/lib/store/checkout/manual-fulfillment";
 import {
   getKinguinBalanceCached,
   updateKinguinBalanceCached,
@@ -66,13 +72,7 @@ function findOrderItemForKey(
 }
 
 async function countDeliveredKeys(orderId: string): Promise<number> {
-  return prisma.orderKey.count({
-    where: {
-      orderItem: { orderId },
-      status: "DELIVERED",
-      serial: { not: "" },
-    },
-  });
+  return countDeliveredKeysForOrder(orderId);
 }
 
 function isPlacingStatus(status: string | null): boolean {
@@ -122,31 +122,7 @@ async function persistKinguinKeys(
   }
 
   if (delivered > 0) {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        total: true,
-        currency: true,
-        kinguinOrderId: true,
-        isPreorder: true,
-        updatedAt: true,
-      },
-    });
-
-    if (order && order.status === "PROCESSING" && !order.isPreorder) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status: "COMPLETED" },
-      });
-
-      await syncTransactionsForOrder({
-        ...order,
-        status: "COMPLETED",
-      });
-    }
+    await completeOrderIfAllKeysDelivered(orderId);
   }
 
   revalidatePath(storeRoutes.orders);
@@ -285,17 +261,15 @@ async function buildAndPlaceKinguinOrder(
   const balance = await getKinguinBalanceCached();
 
   if (balance < totalCostEur) {
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        kinguinStatus: `${KINGUIN_ERROR_PREFIX}Insufficient balance to fulfill order automatically (Cost: ${totalCostEur} EUR, Balance: ${balance} EUR). Manual fulfillment required.`,
-      },
-    });
+    await markOrderForManualFulfillment(
+      order.id,
+      "insufficient_balance",
+      `(Costo: ${totalCostEur.toFixed(2)} EUR, saldo: ${balance.toFixed(2)} EUR)`,
+    );
 
     return {
-      status: "failed",
-      message:
-        "Tu pago está confirmado. Estamos preparando la entrega manualmente; revisa Mis pedidos en unos minutos.",
+      status: "processing",
+      message: MANUAL_FULFILLMENT_CUSTOMER_MESSAGE,
       keysDelivered: 0,
     };
   }
@@ -339,15 +313,6 @@ async function buildAndPlaceKinguinOrder(
 export async function fulfillKinguinOrder(
   orderId: string,
 ): Promise<FulfillKinguinOrderResult> {
-  if (!isKinguinConfigured()) {
-    return {
-      status: "failed",
-      message:
-        "Tu pago está confirmado. Estamos preparando la entrega manualmente; revisa Mis pedidos en unos minutos.",
-      keysDelivered: 0,
-    };
-  }
-
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
@@ -394,15 +359,6 @@ export async function fulfillKinguinOrder(
     };
   }
 
-  const cachedError = cachedFulfillmentError(order.kinguinStatus);
-  if (cachedError && !order.kinguinOrderId) {
-    return {
-      status: "failed",
-      message: cachedError,
-      keysDelivered: 0,
-    };
-  }
-
   const deliveredKeyCount = await countDeliveredKeys(orderId);
   if (deliveredKeyCount > 0) {
     return {
@@ -410,6 +366,36 @@ export async function fulfillKinguinOrder(
       message: "Tus keys están listas abajo.",
       keysDelivered: deliveredKeyCount,
       kinguinOrderId: order.kinguinOrderId ?? undefined,
+    };
+  }
+
+  if (
+    isManualFulfillmentPending(order.kinguinStatus) &&
+    !order.kinguinOrderId
+  ) {
+    return {
+      status: "processing",
+      message: MANUAL_FULFILLMENT_CUSTOMER_MESSAGE,
+      keysDelivered: 0,
+    };
+  }
+
+  if (!isKinguinConfigured()) {
+    await markOrderForManualFulfillment(order.id, "kinguin_not_configured");
+
+    return {
+      status: "processing",
+      message: MANUAL_FULFILLMENT_CUSTOMER_MESSAGE,
+      keysDelivered: 0,
+    };
+  }
+
+  const cachedError = cachedFulfillmentError(order.kinguinStatus);
+  if (cachedError && !order.kinguinOrderId) {
+    return {
+      status: "failed",
+      message: cachedError,
+      keysDelivered: 0,
     };
   }
 
@@ -533,16 +519,15 @@ export async function fulfillKinguinOrder(
       }
     }
 
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        kinguinStatus: `${KINGUIN_ERROR_PREFIX}${message.slice(0, 180)}`,
-      },
-    });
+    await markOrderForManualFulfillment(
+      orderId,
+      "kinguin_error",
+      message.slice(0, 180),
+    );
 
     return {
-      status: "failed",
-      message,
+      status: "processing",
+      message: MANUAL_FULFILLMENT_CUSTOMER_MESSAGE,
       keysDelivered: 0,
       kinguinOrderId: order.kinguinOrderId ?? recovered?.orderId,
     };

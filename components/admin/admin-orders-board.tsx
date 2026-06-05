@@ -37,8 +37,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const STATUS_FILTERS: Array<{ value: "all" | OrderStatus; label: string }> = [
+const STATUS_FILTERS: Array<{
+  value: "all" | OrderStatus | "manual";
+  label: string;
+}> = [
   { value: "all", label: "Todos" },
+  { value: "manual", label: "Entrega manual" },
   { value: "PENDING", label: "Pendiente" },
   { value: "PROCESSING", label: "Procesando" },
   { value: "COMPLETED", label: "Completado" },
@@ -52,12 +56,18 @@ type AdminOrdersBoardProps = {
 
 export function AdminOrdersBoard({ orders }: AdminOrdersBoardProps) {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | OrderStatus | "manual"
+  >("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return orders.filter((order) => {
-      if (statusFilter !== "all" && order.status !== statusFilter) {
+      if (statusFilter === "manual") {
+        if (!order.needsManualFulfillment) {
+          return false;
+        }
+      } else if (statusFilter !== "all" && order.status !== statusFilter) {
         return false;
       }
       if (!q) {
@@ -81,7 +91,8 @@ export function AdminOrdersBoard({ orders }: AdminOrdersBoardProps) {
           </EmptyMedia>
           <EmptyTitle>Sin pedidos</EmptyTitle>
           <EmptyDescription>
-            Los pedidos de la tienda aparecerán aquí cuando los clientes compren.
+            Los pedidos de la tienda aparecerán aquí cuando los clientes
+            compren.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -162,7 +173,17 @@ export function AdminOrdersBoard({ orders }: AdminOrdersBoardProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <OrderStatusBadge status={order.status} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <OrderStatusBadge status={order.status} />
+                      {order.needsManualFulfillment ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500/40 text-[10px] text-amber-700 dark:text-amber-400"
+                        >
+                          Manual
+                        </Badge>
+                      ) : null}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {order.itemCount}

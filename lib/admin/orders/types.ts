@@ -12,6 +12,9 @@ export type AdminOrderListItem = {
   itemCount: number;
   kinguinOrderId: string | null;
   isPreorder: boolean;
+  needsManualFulfillment: boolean;
+  manualFulfillmentNote: string | null;
+  pendingKeyCount: number;
 };
 
 export type AdminOrderKeyDetail = {
@@ -19,6 +22,7 @@ export type AdminOrderKeyDetail = {
   kinguinKeyId: string;
   status: string;
   contentType: string;
+  serial: string;
   serialMasked: string;
 };
 
@@ -29,6 +33,8 @@ export type AdminOrderItemDetail = {
   lineTotal: string;
   kinguinProductId: string;
   productId: string | null;
+  deliveredKeyCount: number;
+  pendingKeyCount: number;
   keys: AdminOrderKeyDetail[];
 };
 
@@ -44,6 +50,11 @@ export type AdminOrderDetail = {
   kinguinStatus: string | null;
   isPreorder: boolean;
   preorderReleaseAt: string | null;
+  needsManualFulfillment: boolean;
+  manualFulfillmentNote: string | null;
+  pendingKeyCount: number;
+  deliveredKeyCount: number;
+  expectedKeyCount: number;
   customer: {
     id: string;
     name: string;

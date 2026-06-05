@@ -15,7 +15,7 @@ import { uploadProductImageToR2 } from "@/lib/r2/upload-product-image";
 import { updateProductSchema } from "@/lib/admin/products/schemas";
 import type { UpdateProductInput } from "@/lib/admin/products/schemas";
 import { getImportedKinguinIds } from "@/lib/admin/products/queries";
-import { uniqueProductSlug } from "@/lib/admin/products/slug";
+import { resolveImportProductSlug } from "@/lib/admin/products/slug";
 import {
   fetchAllKinguinProductsByName,
   formatKinguinError,
@@ -78,7 +78,7 @@ function revalidateProductImportPaths(product?: { id: string }) {
 
 async function importKinguinProduct(
   kinguinProductId: string,
-  options?: { translateWithAi?: boolean },
+  options?: { translateWithAi?: boolean; slug?: string },
 ): Promise<AdminProductActionResult<{ productId: string; slug: string }>> {
   if (!isKinguinConfigured()) {
     return kinguinNotConfiguredError();
@@ -113,7 +113,8 @@ async function importKinguinProduct(
       if (!isOpenAIConfigured()) {
         return {
           success: false,
-          error: "OpenAI no está configurado. Configura OPENAI_API_KEY en el servidor.",
+          error:
+            "OpenAI no está configurado. Configura OPENAI_API_KEY en el servidor.",
         };
       }
       try {
@@ -134,7 +135,11 @@ async function importKinguinProduct(
       }
     }
 
-    const slug = await uniqueProductSlug(name);
+    const slugResult = await resolveImportProductSlug(name, options?.slug);
+    if ("error" in slugResult) {
+      return { success: false, error: slugResult.error };
+    }
+    const slug = slugResult.slug;
     const { rate } = await getEurToClpRate();
 
     const modifiedProduct = {
@@ -201,9 +206,8 @@ async function runWithConcurrency<T, R>(
   }
 
   await Promise.all(
-    Array.from(
-      { length: Math.min(concurrency, items.length) },
-      () => runWorker(),
+    Array.from({ length: Math.min(concurrency, items.length) }, () =>
+      runWorker(),
     ),
   );
 
@@ -220,7 +224,7 @@ function chunkArray<T>(items: T[], size: number) {
 
 function normalizeBulkImportItems(items: BulkKinguinImportItem[]) {
   const seen = new Set<string>();
-  const normalized: Required<BulkKinguinImportItem>[] = [];
+  const normalized: BulkKinguinImportItem[] = [];
 
   for (const item of items) {
     const productId = item.productId.trim();
@@ -229,6 +233,7 @@ function normalizeBulkImportItems(items: BulkKinguinImportItem[]) {
     normalized.push({
       productId,
       name: item.name?.trim() || productId,
+      slug: item.slug?.trim() || undefined,
     });
   }
 
@@ -281,7 +286,7 @@ export async function searchKinguinProductsAction(
 
 export async function importKinguinProductAction(
   kinguinProductId: string,
-  options?: { translateWithAi?: boolean },
+  options?: { translateWithAi?: boolean; slug?: string },
 ): Promise<AdminProductActionResult<{ productId: string; slug: string }>> {
   await requireAdmin();
 
@@ -315,20 +320,26 @@ export async function bulkImportKinguinProductsAction(
     ? BULK_IMPORT_AI_CONCURRENCY
     : BULK_IMPORT_CONCURRENCY;
   const batches = chunkArray(normalizedItems, BULK_IMPORT_BATCH_SIZE);
-  const batchConcurrency = Math.min(BULK_IMPORT_BATCH_CONCURRENCY, batches.length);
+  const batchConcurrency = Math.min(
+    BULK_IMPORT_BATCH_CONCURRENCY,
+    batches.length,
+  );
 
   const batchResults = await runWithConcurrency(
     batches,
     batchConcurrency,
     async (batch) => {
       return runWithConcurrency(batch, concurrency, async (item) => {
-        const result = await importKinguinProduct(item.productId, options);
+        const result = await importKinguinProduct(item.productId, {
+          ...options,
+          slug: item.slug,
+        });
 
         if (!result.success) {
           return {
             success: false as const,
             id: item.productId,
-            name: item.name,
+            name: item.name || item.productId,
             error: result.error,
           };
         }
