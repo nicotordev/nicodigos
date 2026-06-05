@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
+import { AiTextAssistToolbar } from "@/components/admin/ai-text-assist-toolbar";
 import { CategoryMediaField } from "@/components/admin/category-media-field";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { upsertCategoryAction } from "@/lib/admin/categories/actions";
@@ -26,14 +27,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  htmlToPlainText,
+  looksLikeHtml,
   normalizeDescriptionForEditor,
   normalizeDescriptionForSave,
+  plainTextToHtml,
 } from "@/lib/html/text";
 
 type CategoryEditFormProps = {
   category?: AdminCategoryEditData;
   r2Configured: boolean;
+  openAiConfigured: boolean;
 };
+
+function applyAiTextToDescription(text: string): string {
+  if (looksLikeHtml(text)) {
+    return text.trim();
+  }
+  return plainTextToHtml(text);
+}
 
 function buildInitialForm(
   category?: AdminCategoryEditData,
@@ -61,10 +73,12 @@ function buildInitialForm(
 export function CategoryEditForm({
   category,
   r2Configured,
+  openAiConfigured,
 }: CategoryEditFormProps) {
   const router = useRouter();
   const isNew = !category;
   const [error, setError] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [draftSlug, setDraftSlug] = useState<string | null>(
@@ -89,7 +103,7 @@ export function CategoryEditForm({
     null,
   );
 
-  function buildPayload(): UpsertCategoryInput {
+  const buildPayload = useCallback((): UpsertCategoryInput => {
     return {
       id: form.id,
       name: form.name.trim(),
@@ -98,7 +112,7 @@ export function CategoryEditForm({
       bannerUrl: form.bannerUrl.trim() || undefined,
       sortOrder: form.sortOrder,
     };
-  }
+  }, [form]);
 
   const ensureCategoryId = useCallback(async (): Promise<string | null> => {
     if (form.id) {
@@ -138,14 +152,7 @@ export function CategoryEditForm({
     } finally {
       ensureCategoryIdPromiseRef.current = null;
     }
-  }, [
-    form.id,
-    form.name,
-    form.description,
-    form.imageUrl,
-    form.bannerUrl,
-    form.sortOrder,
-  ]);
+  }, [form.id, form.name, buildPayload]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -212,9 +219,35 @@ export function CategoryEditForm({
               </Field>
             ) : null}
             <Field>
-              <FieldLabel htmlFor="cat-desc">Descripción</FieldLabel>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <FieldLabel htmlFor="cat-desc" className="mb-0">
+                  Descripción
+                </FieldLabel>
+                <AiTextAssistToolbar
+                  configured={openAiConfigured}
+                  field="categoryDescription"
+                  value={htmlToPlainText(form.description ?? "")}
+                  categoryContext={{
+                    name: form.name.trim() || category?.name || "Categoría",
+                    slug: displaySlug,
+                    productCount: category?.productCount,
+                  }}
+                  requireUserPrompt
+                  userPromptPlaceholder="Ej.: Describe una categoría de juegos de terror, tono cercano, menciona que son keys digitales para Chile…"
+                  onApply={(text) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: applyAiTextToDescription(text),
+                    }))
+                  }
+                  onError={setAiError}
+                  disabled={isPending}
+                />
+              </div>
               <FieldDescription>
-                Editor rich text para la ficha de la categoría en la tienda.
+                Editor rich text para la ficha de la categoría en la tienda. La
+                asistencia IA te pedirá instrucciones antes de generar el HTML
+                para el catálogo en Chile.
               </FieldDescription>
               <RichTextEditor
                 id="cat-desc"
@@ -299,6 +332,13 @@ export function CategoryEditForm({
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {aiError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Asistencia IA</AlertTitle>
+          <AlertDescription>{aiError}</AlertDescription>
         </Alert>
       ) : null}
 

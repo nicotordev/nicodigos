@@ -7,6 +7,7 @@ import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-heade
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { getAdminCategoryForEdit } from "@/lib/admin/categories/queries";
+import { isOpenAIConfigured } from "@/lib/openai/env";
 import { isR2Configured } from "@/lib/r2/env";
 
 type PageProps = {
@@ -60,7 +61,11 @@ export default async function AdminCategoryEditPage({
         </Alert>
       ) : null}
 
-      <CategoryEditForm category={category} r2Configured={isR2Configured()} />
+      <CategoryEditForm
+        category={category}
+        r2Configured={isR2Configured()}
+        openAiConfigured={isOpenAIConfigured()}
+      />
     </div>
   );
 }

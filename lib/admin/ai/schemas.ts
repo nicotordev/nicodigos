@@ -11,10 +11,17 @@ const aiTextTaskSchema = z.enum([
 const aiTextFieldSchema = z.enum([
   "name",
   "description",
+  "categoryDescription",
   "activationDetails",
   "regionalLimitations",
   "systemRequirementLines",
 ]);
+
+const aiCategoryContextSchema = z.object({
+  name: z.string().min(1).max(500),
+  slug: z.string().max(200).nullable().optional(),
+  productCount: z.number().int().min(0).optional(),
+});
 
 const aiProductContextSchema = z.object({
   name: z.string().min(1).max(500),
@@ -54,9 +61,39 @@ export const aiSystemRequirementBlockAssistInputSchema = z.object({
   requirementLines: z.string().max(20_000),
 });
 
-export const aiTextAssistInputSchema = z.object({
-  task: aiTextTaskSchema,
-  field: aiTextFieldSchema,
-  currentText: z.string().max(50_000),
-  productContext: aiProductContextSchema,
-});
+export const aiTextAssistInputSchema = z
+  .object({
+    task: aiTextTaskSchema,
+    field: aiTextFieldSchema,
+    currentText: z.string().max(50_000),
+    userPrompt: z.string().max(4000).optional(),
+    productContext: aiProductContextSchema.optional(),
+    categoryContext: aiCategoryContextSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.field === "categoryDescription") {
+      if (!data.categoryContext) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "categoryContext es obligatorio para categoryDescription",
+          path: ["categoryContext"],
+        });
+      }
+      if (!data.userPrompt?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "userPrompt es obligatorio para categoryDescription",
+          path: ["userPrompt"],
+        });
+      }
+      return;
+    }
+
+    if (!data.productContext) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "productContext es obligatorio para este campo",
+        path: ["productContext"],
+      });
+    }
+  });

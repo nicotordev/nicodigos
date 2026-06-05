@@ -4,6 +4,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { CategoryEditForm } from "@/components/admin/category-edit-form";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Button } from "@/components/ui/button";
+import { isOpenAIConfigured } from "@/lib/openai/env";
 import { isR2Configured } from "@/lib/r2/env";
 
 export const metadata: Metadata = {
@@ -26,7 +27,10 @@ export default function AdminNewCategoryPage() {
         />
       </div>
 
-      <CategoryEditForm r2Configured={isR2Configured()} />
+      <CategoryEditForm
+        r2Configured={isR2Configured()}
+        openAiConfigured={isOpenAIConfigured()}
+      />
     </div>
   );
 }

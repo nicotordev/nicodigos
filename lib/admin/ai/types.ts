@@ -8,9 +8,16 @@ export type AiTextTask =
 export type AiTextField =
   | "name"
   | "description"
+  | "categoryDescription"
   | "activationDetails"
   | "regionalLimitations"
   | "systemRequirementLines";
+
+export type AiCategoryContext = {
+  name: string;
+  slug?: string | null;
+  productCount?: number;
+};
 
 export type AiProductContext = {
   name: string;
@@ -27,7 +34,9 @@ export type AiTextAssistInput = {
   task: AiTextTask;
   field: AiTextField;
   currentText: string;
-  productContext: AiProductContext;
+  userPrompt?: string;
+  productContext?: AiProductContext;
+  categoryContext?: AiCategoryContext;
 };
 
 export type AiTextAssistResult =

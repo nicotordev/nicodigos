@@ -64,11 +64,29 @@ export async function assistProductTextAction(
     return { success: false, error: "Datos de asistencia IA inválidos." };
   }
 
-  const { task, field, currentText, productContext } = parsed.data;
+  const {
+    task,
+    field,
+    currentText,
+    userPrompt,
+    productContext,
+    categoryContext,
+  } = parsed.data;
 
   const sourceError = taskNeedsSourceText(task, currentText);
   if (sourceError) {
     return { success: false, error: sourceError };
+  }
+
+  if (field === "categoryDescription" && task === "generate") {
+    const categoryName = categoryContext?.name.trim();
+    if (!categoryName) {
+      return {
+        success: false,
+        error:
+          "Escribe un nombre de categoría antes de generar la descripción.",
+      };
+    }
   }
 
   const client = getOpenAIClient();
@@ -76,12 +94,11 @@ export async function assistProductTextAction(
     return openAiNotConfiguredError();
   }
 
-  const { system, user } = buildAiTextMessages(
-    task,
-    field,
-    currentText,
+  const { system, user } = buildAiTextMessages(task, field, currentText, {
     productContext,
-  );
+    categoryContext,
+    userPrompt,
+  });
 
   try {
     const model = getOpenAIModel();
@@ -90,7 +107,9 @@ export async function assistProductTextAction(
     const completion = await client.chat.completions.create({
       model,
       max_completion_tokens: MAX_OUTPUT_TOKENS,
-      ...(!isReasoningModel && { temperature: task === "translate" ? 0.3 : 0.6 }),
+      ...(!isReasoningModel && {
+        temperature: task === "translate" ? 0.3 : 0.6,
+      }),
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -178,7 +197,9 @@ export async function assistSystemRequirementsAction(
     const completion = await client.chat.completions.create({
       model,
       max_completion_tokens: MAX_OUTPUT_TOKENS,
-      ...(!isReasoningModel && { temperature: task === "translate" ? 0.3 : 0.5 }),
+      ...(!isReasoningModel && {
+        temperature: task === "translate" ? 0.3 : 0.5,
+      }),
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
@@ -272,7 +293,9 @@ export async function assistSystemRequirementBlockAction(
     const completion = await client.chat.completions.create({
       model,
       max_completion_tokens: MAX_OUTPUT_TOKENS,
-      ...(!isReasoningModel && { temperature: task === "translate" ? 0.3 : 0.6 }),
+      ...(!isReasoningModel && {
+        temperature: task === "translate" ? 0.3 : 0.6,
+      }),
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
