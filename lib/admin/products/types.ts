@@ -35,8 +35,12 @@ export type KinguinSearchMode = "api" | "catalog";
 export type KinguinSearchPayload = {
   items: KinguinSearchResultItem[];
   total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
   fromCache: boolean;
   searchMode: KinguinSearchMode;
+  truncated?: boolean;
 };
 
 export type BulkKinguinImportItem = {

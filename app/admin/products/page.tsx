@@ -4,7 +4,14 @@ import { IconPlus } from "@tabler/icons-react";
 import { AdminProductsBoard } from "@/components/admin/admin-products-board";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Button } from "@/components/ui/button";
-import { getAdminProducts } from "@/lib/admin/products/queries";
+import {
+  hasActiveAdminProductFilters,
+  parseAdminProductFilters,
+} from "@/lib/admin/products/filters";
+import {
+  getAdminProductFilterOptions,
+  getAdminProducts,
+} from "@/lib/admin/products/queries";
 import { syncAllProductGalleriesIfNeeded } from "@/lib/admin/products/sync-gallery";
 import { syncAllProductMetadataFromKinguinIfNeeded } from "@/lib/admin/products/sync-metadata";
 import { syncAllProductVideosIfNeeded } from "@/lib/admin/products/sync-videos";
@@ -18,13 +25,12 @@ export const metadata: Metadata = {
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const resolvedParams = await searchParams;
-  const page = resolvedParams.page ? parseInt(resolvedParams.page) : 1;
-  const search = resolvedParams.search || "";
+  const filters = parseAdminProductFilters(resolvedParams);
 
-  if (page === 1 && !search) {
+  if (filters.page === 1 && !hasActiveAdminProductFilters(filters)) {
     getEurToClpRate()
       .then((fx) => {
         Promise.all([
@@ -41,11 +47,13 @@ export default async function AdminProductsPage({
       });
   }
 
-  const { products, total, totalPages, page: currentPage, stats } = await getAdminProducts({
-    page,
-    limit: 50,
-    search,
-  });
+  const [
+    { products, total, totalPages, page: currentPage, stats },
+    filterOptions,
+  ] = await Promise.all([
+    getAdminProducts(filters, { limit: 50 }),
+    getAdminProductFilterOptions(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 md:space-y-8">
@@ -67,7 +75,8 @@ export default async function AdminProductsPage({
         total={total}
         page={currentPage}
         totalPages={totalPages}
-        search={search}
+        filters={filters}
+        filterOptions={filterOptions}
         stats={stats}
       />
     </div>

@@ -18,6 +18,12 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
+import {
+  buildAdminProductsSearchParams,
+  hasActiveAdminProductFilters,
+  type AdminProductFilterOptions,
+  type AdminProductFilters,
+} from "@/lib/admin/products/filters";
 import type { AdminProductListItem } from "@/lib/admin/products/types";
 import { formatMoney, formatSourceMoney } from "@/lib/admin/format";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +63,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { bulkUpdateProductsAction } from "@/lib/admin/products/actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -66,7 +79,8 @@ type AdminProductsBoardProps = {
   total: number;
   page: number;
   totalPages: number;
-  search: string;
+  filters: AdminProductFilters;
+  filterOptions: AdminProductFilterOptions;
   stats: {
     total: number;
     active: number;
@@ -93,42 +107,49 @@ export function AdminProductsBoard({
   total,
   page,
   totalPages,
-  search,
+  filters,
+  filterOptions,
   stats,
 }: AdminProductsBoardProps) {
   const router = useRouter();
-  const [query, setQuery] = useState(search);
-  const [prevSearch, setPrevSearch] = useState(search);
+  const [query, setQuery] = useState(filters.search);
+  const [prevSearch, setPrevSearch] = useState(filters.search);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
-
-  const filtered = products;
+  const hasFilters = hasActiveAdminProductFilters(filters);
 
   // Sync state when prop updates from outside (like page back/forward or sidebar click)
-  if (search !== prevSearch) {
-    setPrevSearch(search);
-    setQuery(search);
+  if (filters.search !== prevSearch) {
+    setPrevSearch(filters.search);
+    setQuery(filters.search);
   }
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
 
+  const navigateWithFilters = useCallback(
+    (patch: Partial<AdminProductFilters>, resetSelection = true) => {
+      if (resetSelection) {
+        setSelectedIds([]);
+      }
+      const params = buildAdminProductsSearchParams(filters, patch);
+      const queryString = params.toString();
+      router.push(
+        queryString ? `/admin/products?${queryString}` : "/admin/products",
+      );
+    },
+    [filters, router],
+  );
+
   const debouncedSearch = useCallback(
     (value: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (value.trim()) {
-          params.set("search", value.trim());
-        } else {
-          params.delete("search");
-        }
-        params.set("page", "1");
-        router.push(`/admin/products?${params.toString()}`);
+        navigateWithFilters({ search: value.trim(), page: 1 });
       }, 400);
     },
-    [router],
+    [navigateWithFilters],
   );
 
   const handleSearchChange = (val: string) => {
@@ -137,9 +158,24 @@ export function AdminProductsBoard({
   };
 
   function handlePageChange(newPage: number) {
-    const params = new URLSearchParams(window.location.search);
-    params.set("page", newPage.toString());
-    router.push(`/admin/products?${params.toString()}`);
+    navigateWithFilters({ page: newPage }, false);
+  }
+
+  function handleFilterChange(patch: Partial<AdminProductFilters>) {
+    navigateWithFilters({ ...patch, page: 1 });
+  }
+
+  function handleResetFilters() {
+    navigateWithFilters({
+      search: "",
+      status: "all",
+      platform: "",
+      stock: "all",
+      flag: "all",
+      categoryId: "",
+      page: 1,
+    });
+    setQuery("");
   }
 
   function getPageNumbers() {
@@ -175,9 +211,9 @@ export function AdminProductsBoard({
   }
 
   const allSelected =
-    filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.id));
+    products.length > 0 && products.every((p) => selectedIds.includes(p.id));
   const someSelected =
-    filtered.some((p) => selectedIds.includes(p.id)) && !allSelected;
+    products.some((p) => selectedIds.includes(p.id)) && !allSelected;
   const headerCheckedState = allSelected
     ? true
     : someSelected
@@ -266,33 +302,151 @@ export function AdminProductsBoard({
       </div>
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Catálogo</CardTitle>
-            <CardDescription>
-              Haz clic en un producto para abrir su página de edición.
-            </CardDescription>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Catálogo</CardTitle>
+              <CardDescription>
+                {hasFilters
+                  ? `${total} producto${total === 1 ? "" : "s"} con los filtros actuales. Marca los que quieras para acciones masivas.`
+                  : "Haz clic en un producto para abrir su página de edición."}
+              </CardDescription>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <InputGroup className="sm:w-64">
+                <InputGroupAddon>
+                  <IconSearch className="size-4" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  placeholder="Buscar por nombre, plataforma…"
+                  value={query}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+              </InputGroup>
+              <Button asChild>
+                <Link href="/admin/products/new">Nuevo producto</Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <InputGroup className="sm:w-64">
-              <InputGroupAddon>
-                <IconSearch className="size-4" />
-              </InputGroupAddon>
-              <InputGroupInput
-                placeholder="Buscar por nombre, plataforma…"
-                value={query}
-                onChange={(e) => handleSearchChange(e.target.value)}
-              />
-            </InputGroup>
-            <Button asChild>
-              <Link href="/admin/products/new">Nuevo producto</Link>
-            </Button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={filters.status}
+              onValueChange={(value) =>
+                handleFilterChange({
+                  status: value as AdminProductFilters["status"],
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="min-w-32">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="draft">Borradores</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.platform || "all"}
+              onValueChange={(value) =>
+                handleFilterChange({
+                  platform: value === "all" ? "" : value,
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="min-w-36">
+                <SelectValue placeholder="Plataforma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las plataformas</SelectItem>
+                {filterOptions.platforms.map((platform) => (
+                  <SelectItem key={platform} value={platform}>
+                    {platform}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.stock}
+              onValueChange={(value) =>
+                handleFilterChange({
+                  stock: value as AdminProductFilters["stock"],
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="min-w-32">
+                <SelectValue placeholder="Stock" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todo el stock</SelectItem>
+                <SelectItem value="low">Stock bajo (&lt;5)</SelectItem>
+                <SelectItem value="out">Sin stock</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.flag}
+              onValueChange={(value) =>
+                handleFilterChange({
+                  flag: value as AdminProductFilters["flag"],
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="min-w-32">
+                <SelectValue placeholder="Etiqueta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las etiquetas</SelectItem>
+                <SelectItem value="offer">Oferta</SelectItem>
+                <SelectItem value="featured">Destacado en inicio</SelectItem>
+                <SelectItem value="preorder">Preorder</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.categoryId || "all"}
+              onValueChange={(value) =>
+                handleFilterChange({
+                  categoryId: value === "all" ? "" : value,
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="min-w-36">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {filterOptions.categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="h-8 gap-1.5"
+              >
+                <IconX className="size-3.5" />
+                Limpiar filtros
+              </Button>
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="px-0 pb-0">
-          {filtered.length === 0 ? (
+          {products.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-              Ningún producto coincide con &quot;{query}&quot;.
+              {hasFilters
+                ? "Ningún producto coincide con los filtros aplicados."
+                : `Ningún producto coincide con "${query}".`}
             </p>
           ) : (
             <Table className="min-w-4xl">
@@ -303,7 +457,7 @@ export function AdminProductsBoard({
                       checked={headerCheckedState}
                       onCheckedChange={(checked) => {
                         if (checked === true) {
-                          setSelectedIds(filtered.map((p) => p.id));
+                          setSelectedIds(products.map((p) => p.id));
                         } else {
                           setSelectedIds([]);
                         }
@@ -331,7 +485,7 @@ export function AdminProductsBoard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((product) => {
+                {products.map((product) => {
                   const margin = marginPercent(
                     product.costPrice,
                     product.sellPrice,

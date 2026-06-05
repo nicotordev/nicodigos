@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { IconPackage, IconSearch } from "@tabler/icons-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconPackage,
+  IconSearch,
+} from "@tabler/icons-react";
 import {
   bulkImportKinguinProductsAction,
   importKinguinProductAction,
@@ -72,6 +77,11 @@ export function CreateProductFromKinguinForm({
   const [hasSearched, setHasSearched] = useState(false);
   const [fromCache, setFromCache] = useState(false);
   const [searchMode, setSearchMode] = useState<"api" | "catalog" | null>(null);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(25);
   const [importingId, setImportingId] = useState<string | null>(null);
   const [pendingImport, setPendingImport] =
     useState<KinguinSearchResultItem | null>(null);
@@ -94,28 +104,51 @@ export function CreateProductFromKinguinForm({
     errors: BulkKinguinImportError[];
   } | null>(null);
 
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function runSearch(page = 1, resetSelection = true) {
     setError(null);
     setSuccess(null);
-    setSelectedIds([]);
+    if (resetSelection) {
+      setSelectedIds([]);
+    }
     setBulkImportProgress(null);
     setImportedProductId(null);
 
     startSearch(async () => {
-      const result = await searchKinguinProductsAction(query);
+      const result = await searchKinguinProductsAction(query, { page });
       setHasSearched(true);
 
       if (!result.success) {
         setResults([]);
+        setSearchPage(1);
+        setSearchTotal(0);
+        setSearchTotalPages(1);
+        setSearchTruncated(false);
         setError(result.error);
         return;
       }
 
       setResults(result.data.items);
+      setSearchPage(result.data.page);
+      setSearchTotal(result.data.total);
+      setSearchTotalPages(result.data.totalPages);
+      setSearchTruncated(result.data.truncated ?? false);
+      setSearchLimit(result.data.limit);
       setFromCache(result.data.fromCache);
       setSearchMode(result.data.searchMode);
     });
+  }
+
+  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSearchPage(1);
+    runSearch(1);
+  }
+
+  function handleSearchPageChange(newPage: number) {
+    if (newPage < 1 || newPage > searchTotalPages || newPage === searchPage) {
+      return;
+    }
+    runSearch(newPage, false);
   }
 
   function openImportDialog(item: KinguinSearchResultItem) {
@@ -385,11 +418,13 @@ export function CreateProductFromKinguinForm({
                   </Button>
                 </div>
                 <FieldDescription>
-                  Mínimo 3 caracteres. En sandbox Kinguin el parámetro{" "}
-                  <code className="text-xs">name</code> falla en su API; se
-                  descarga el catálogo y se filtra aquí. En producción se usa{" "}
-                  <code className="text-xs">?name=</code> directamente. Caché
-                  Redis 15 min (búsqueda) y 1 h (catálogo).
+                  Mínimo 3 caracteres. Kinguin pagina con{" "}
+                  <code className="text-xs">page</code> y{" "}
+                  <code className="text-xs">limit</code> (máx. 100 por página);
+                  términos amplios como &quot;steam&quot; pueden devolver miles
+                  de resultados — aquí se muestran por páginas de 25. En
+                  sandbox, si <code className="text-xs">?name=</code> falla, se
+                  filtra el catálogo en caché (máx. 1000 coincidencias).
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -483,8 +518,14 @@ export function CreateProductFromKinguinForm({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm text-muted-foreground">
-                {results.length} resultado{results.length === 1 ? "" : "s"}
+                Página {searchPage} de {searchTotalPages} · {searchTotal}{" "}
+                resultado{searchTotal === 1 ? "" : "s"} en Kinguin
               </p>
+              {searchTruncated ? (
+                <Badge variant="outline" className="text-amber-700">
+                  Catálogo truncado — afina la búsqueda
+                </Badge>
+              ) : null}
               {fromCache ? (
                 <Badge variant="outline">Desde caché Redis</Badge>
               ) : null}
@@ -687,6 +728,41 @@ export function CreateProductFromKinguinForm({
               </ul>
             </ScrollArea>
           )}
+
+          {searchTotalPages > 1 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {(searchPage - 1) * searchLimit + 1}–
+                {Math.min(searchPage * searchLimit, searchTotal)} de{" "}
+                {searchTotal}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSearching || searchPage <= 1}
+                  onClick={() => handleSearchPageChange(searchPage - 1)}
+                >
+                  <IconChevronLeft className="size-4" />
+                  Anterior
+                </Button>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {searchPage} / {searchTotalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSearching || searchPage >= searchTotalPages}
+                  onClick={() => handleSearchPageChange(searchPage + 1)}
+                >
+                  Siguiente
+                  <IconChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

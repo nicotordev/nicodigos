@@ -1,5 +1,9 @@
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type {
+  AdminProductFilterOptions,
+  AdminProductFilters,
+} from "@/lib/admin/products/filters";
 import type { AdminProductListItem } from "@/lib/admin/products/types";
 
 export type AdminProductsResponse = {
@@ -15,29 +19,89 @@ export type AdminProductsResponse = {
   };
 };
 
-export async function getAdminProducts(
-  options: {
-    page?: number;
-    limit?: number;
-    search?: string;
-  } = {},
-): Promise<AdminProductsResponse> {
-  const page = Math.max(1, options.page ?? 1);
-  const limit = Math.max(1, options.limit ?? 50);
-  const search = options.search?.trim().toLowerCase() ?? "";
+function buildAdminProductWhere(
+  filters: Pick<
+    AdminProductFilters,
+    "search" | "status" | "platform" | "stock" | "flag" | "categoryId"
+  >,
+): Prisma.ProductWhereInput {
+  const and: Prisma.ProductWhereInput[] = [];
+  const search = filters.search.trim().toLowerCase();
 
-  const where: Prisma.ProductWhereInput = {};
   if (search) {
-    where.OR = [
+    const or: Prisma.ProductWhereInput[] = [
       { name: { contains: search, mode: "insensitive" } },
       { platform: { contains: search, mode: "insensitive" } },
       { slug: { contains: search, mode: "insensitive" } },
     ];
-    const kinguinIdSearch = parseInt(search);
-    if (!isNaN(kinguinIdSearch)) {
-      where.OR.push({ kinguinId: kinguinIdSearch });
+    const kinguinIdSearch = parseInt(search, 10);
+    if (!Number.isNaN(kinguinIdSearch)) {
+      or.push({ kinguinId: kinguinIdSearch });
     }
+    and.push({ OR: or });
   }
+
+  if (filters.status === "active") {
+    and.push({ isActive: true });
+  } else if (filters.status === "draft") {
+    and.push({ isActive: false });
+  }
+
+  if (filters.platform) {
+    and.push({
+      platform: { equals: filters.platform, mode: "insensitive" },
+    });
+  }
+
+  if (filters.stock === "low") {
+    and.push({ qty: { lt: 5 } });
+  } else if (filters.stock === "out") {
+    and.push({ qty: 0 });
+  }
+
+  if (filters.flag === "offer") {
+    and.push({ isOffer: true });
+  } else if (filters.flag === "featured") {
+    and.push({ isFeatured: true });
+  } else if (filters.flag === "preorder") {
+    and.push({ isPreorder: true });
+  }
+
+  if (filters.categoryId) {
+    and.push({
+      categories: { some: { id: filters.categoryId } },
+    });
+  }
+
+  return and.length > 0 ? { AND: and } : {};
+}
+
+export async function getAdminProductFilterOptions(): Promise<AdminProductFilterOptions> {
+  const [platformRows, categories] = await Promise.all([
+    prisma.product.findMany({
+      distinct: ["platform"],
+      select: { platform: true },
+      orderBy: { platform: "asc" },
+    }),
+    prisma.category.findMany({
+      select: { id: true, name: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
+  ]);
+
+  return {
+    platforms: platformRows.map((row) => row.platform),
+    categories,
+  };
+}
+
+export async function getAdminProducts(
+  filters: AdminProductFilters,
+  options: { limit?: number } = {},
+): Promise<AdminProductsResponse> {
+  const page = Math.max(1, filters.page);
+  const limit = Math.max(1, options.limit ?? 50);
+  const where = buildAdminProductWhere(filters);
 
   // Get global counts (not filtered by search) for the board overview cards
   const [globalTotal, globalActive, globalLowStock] = await Promise.all([

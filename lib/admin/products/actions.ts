@@ -17,8 +17,8 @@ import type { UpdateProductInput } from "@/lib/admin/products/schemas";
 import { getImportedKinguinIds } from "@/lib/admin/products/queries";
 import { resolveImportProductSlug } from "@/lib/admin/products/slug";
 import {
-  fetchAllKinguinProductsByName,
   formatKinguinError,
+  searchKinguinProductsByName,
 } from "@/lib/admin/products/kinguin-search";
 import type {
   AdminProductActionResult,
@@ -242,6 +242,7 @@ function normalizeBulkImportItems(items: BulkKinguinImportItem[]) {
 
 export async function searchKinguinProductsAction(
   name: string,
+  options?: { page?: number },
 ): Promise<AdminProductActionResult<KinguinSearchPayload>> {
   await requireAdmin();
 
@@ -258,7 +259,9 @@ export async function searchKinguinProductsAction(
   }
 
   try {
-    const result = await fetchAllKinguinProductsByName(query);
+    const result = await searchKinguinProductsByName(query, {
+      page: options?.page,
+    });
     const { products, fromCache } = result;
     const imported = await getImportedKinguinIds(
       products.map((item) => item.kinguinId),
@@ -271,9 +274,13 @@ export async function searchKinguinProductsAction(
       success: true,
       data: {
         items,
-        total: items.length,
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+        limit: result.limit,
         fromCache,
         searchMode: result.searchMode,
+        truncated: result.truncated,
       },
     };
   } catch (error) {
