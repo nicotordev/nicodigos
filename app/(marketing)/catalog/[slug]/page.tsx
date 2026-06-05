@@ -83,7 +83,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     product.qty > 0
       ? hasImmediateDelivery
         ? `${product.qty} en stock — entrega al tiro`
-        : `${product.qty} en stock — entrega dentro de 24 h`
+        : `${product.qty} en stock — entrega diferida (preparación manual)`
       : "Sin stock por ahora";
   const deliveryMessageClassName =
     product.qty > 0
@@ -91,9 +91,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         ? "text-emerald-600 dark:text-emerald-400"
         : "text-amber-600 dark:text-amber-500"
       : "text-muted-foreground";
-  const activationDeliveryText = hasImmediateDelivery
-    ? "Recibes tu key o instrucciones en tu cuenta y correo apenas se confirme el pago."
-    : "Recibes tu key o instrucciones en tu cuenta y correo dentro de las próximas 24 horas tras confirmar el pago.";
+  const activationDeliveryText = !inStock
+    ? "No hay stock disponible en este momento. Cuando vuelva a estar disponible podrás comprarlo y recibir la key tras confirmar el pago."
+    : product.isPreorder
+      ? "Al confirmarse el pago reservamos tu preventa. Te avisamos por correo y en Mis pedidos cuando la key esté disponible."
+      : hasImmediateDelivery
+        ? "Recibes tu key o instrucciones en tu cuenta y correo apenas se confirme el pago."
+        : "Tras confirmar el pago preparamos tu entrega manualmente. Te avisamos por correo y en Mis pedidos cuando esté lista; suele tardar hasta 24 horas.";
 
   return (
     <main className="flex-1 bg-background">
