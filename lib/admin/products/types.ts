@@ -16,6 +16,7 @@ export type AdminProductListItem = {
   coverImageUrl: string | null;
   offerCount: number;
   updatedAt: string;
+  countryLimitations: string[];
 };
 
 export type KinguinSearchResultItem = {
@@ -28,6 +29,8 @@ export type KinguinSearchResultItem = {
   coverImageUrl: string | null;
   isPreorder: boolean;
   alreadyImported: boolean;
+  /** ID del producto local cuando ya está importado. */
+  localProductId: string | null;
   countryLimitations: string[];
 };
 

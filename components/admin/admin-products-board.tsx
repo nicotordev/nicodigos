@@ -26,6 +26,7 @@ import {
   type AdminProductFilterOptions,
   type AdminProductFilters,
 } from "@/lib/admin/products/filters";
+import { ChileExclusionIndicator } from "@/components/admin/chile-exclusion-indicator";
 import type { AdminProductListItem } from "@/lib/admin/products/types";
 import { formatMoney, formatSourceMoney } from "@/lib/admin/format";
 import { Badge } from "@/components/ui/badge";
@@ -694,6 +695,11 @@ export function AdminProductsBoard({
                           {product.isFeatured ? (
                             <Badge variant="secondary">Inicio</Badge>
                           ) : null}
+                          <ChileExclusionIndicator
+                            countryLimitations={product.countryLimitations}
+                            variant="badge"
+                            tooltipSide="top"
+                          />
                         </div>
                       </TableCell>
                       <TableCell

@@ -145,6 +145,7 @@ export async function getAdminProducts(
     coverImageUrl: product.coverImageUrl,
     offerCount: product._count.offers,
     updatedAt: product.updatedAt.toISOString(),
+    countryLimitations: product.countryLimitations,
   }));
 
   return {
@@ -164,9 +165,19 @@ export async function getAdminProducts(
 export async function getImportedKinguinIds(
   kinguinIds: number[],
   productIds: string[],
-): Promise<{ kinguinIds: Set<number>; productIds: Set<string> }> {
+): Promise<{
+  kinguinIds: Set<number>;
+  productIds: Set<string>;
+  localIdByKinguinProductId: Map<string, string>;
+  localIdByKinguinId: Map<number, string>;
+}> {
   if (kinguinIds.length === 0 && productIds.length === 0) {
-    return { kinguinIds: new Set(), productIds: new Set() };
+    return {
+      kinguinIds: new Set(),
+      productIds: new Set(),
+      localIdByKinguinProductId: new Map(),
+      localIdByKinguinId: new Map(),
+    };
   }
 
   const existing = await prisma.product.findMany({
@@ -178,11 +189,21 @@ export async function getImportedKinguinIds(
           : []),
       ],
     },
-    select: { kinguinId: true, kinguinProductId: true },
+    select: { id: true, kinguinId: true, kinguinProductId: true },
   });
+
+  const localIdByKinguinProductId = new Map<string, string>();
+  const localIdByKinguinId = new Map<number, string>();
+
+  for (const row of existing) {
+    localIdByKinguinProductId.set(row.kinguinProductId, row.id);
+    localIdByKinguinId.set(row.kinguinId, row.id);
+  }
 
   return {
     kinguinIds: new Set(existing.map((row) => row.kinguinId)),
     productIds: new Set(existing.map((row) => row.kinguinProductId)),
+    localIdByKinguinProductId,
+    localIdByKinguinId,
   };
 }

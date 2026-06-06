@@ -52,8 +52,17 @@ function kinguinNotConfiguredError(): AdminProductActionResult<never> {
 
 function mapSearchResult(
   product: KinguinProduct,
-  imported: { kinguinIds: Set<number>; productIds: Set<string> },
+  imported: {
+    kinguinIds: Set<number>;
+    productIds: Set<string>;
+    localIdByKinguinProductId: Map<string, string>;
+    localIdByKinguinId: Map<number, string>;
+  },
 ): KinguinSearchResultItem {
+  const alreadyImported =
+    imported.kinguinIds.has(product.kinguinId) ||
+    imported.productIds.has(product.productId);
+
   return {
     kinguinId: product.kinguinId,
     productId: product.productId,
@@ -63,9 +72,12 @@ function mapSearchResult(
     qty: product.qty,
     coverImageUrl: resolveKinguinProductCoverUrl(product),
     isPreorder: product.isPreorder,
-    alreadyImported:
-      imported.kinguinIds.has(product.kinguinId) ||
-      imported.productIds.has(product.productId),
+    alreadyImported,
+    localProductId: alreadyImported
+      ? (imported.localIdByKinguinProductId.get(product.productId) ??
+        imported.localIdByKinguinId.get(product.kinguinId) ??
+        null)
+      : null,
     countryLimitations: normalizeCountryLimitations(product.countryLimitation),
   };
 }

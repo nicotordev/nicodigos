@@ -9,17 +9,19 @@ import {
   IconChevronRight,
   IconPackage,
   IconSearch,
-  IconX,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
+  bulkDeleteProductsAction,
   bulkImportKinguinProductsAction,
+  deleteProductAction,
   importKinguinProductAction,
   searchKinguinProductsAction,
 } from "@/lib/admin/products/actions";
 import { slugify } from "@/lib/admin/products/slugify";
 import type { BulkKinguinImportError } from "@/lib/admin/products/types";
 import type { KinguinSearchResultItem } from "@/lib/admin/products/types";
-import { isCountryExcluded } from "@/lib/admin/products/country-limitations";
+import { ChileExclusionIndicator } from "@/components/admin/chile-exclusion-indicator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatSourceMoney } from "@/lib/admin/format";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -49,11 +51,6 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -72,45 +69,6 @@ const BULK_IMPORT_CONCURRENCY = 3;
 const BULK_IMPORT_AI_CONCURRENCY = 2;
 const BULK_IMPORT_BATCH_SIZE = 100;
 const BULK_IMPORT_BATCH_CONCURRENCY = 2;
-
-function ChileExclusionIndicator({
-  countryLimitations,
-}: {
-  countryLimitations: string[];
-}) {
-  if (!isCountryExcluded(countryLimitations, "CL")) {
-    return null;
-  }
-
-  const excludedList = countryLimitations.join(", ");
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className="inline-flex size-8 shrink-0 cursor-help items-center justify-center rounded-full bg-destructive/10 text-destructive"
-          aria-label="Chile excluido"
-        >
-          <IconX className="size-4" stroke={2.5} />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent
-        side="left"
-        className="max-w-xs flex-col items-start gap-0 py-2"
-      >
-        <p className="font-medium">Chile (CL) excluido</p>
-        <p className="mt-1 text-background/80">
-          Este producto no está disponible para clientes en Chile según Kinguin.
-        </p>
-        {excludedList ? (
-          <p className="mt-1 text-background/80">
-            Países excluidos: {excludedList}
-          </p>
-        ) : null}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
 
 export function CreateProductFromKinguinForm({
   kinguinConfigured,
@@ -135,6 +93,7 @@ export function CreateProductFromKinguinForm({
   const [importSlug, setImportSlug] = useState("");
   const [isSearching, startSearch] = useTransition();
   const [isImporting, startImport] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [translateWithAi, setTranslateWithAi] = useState(openAiConfigured);
@@ -236,7 +195,11 @@ export function CreateProductFromKinguinForm({
         setResults((prev) =>
           prev.map((item) => {
             if (item.productId === productId) {
-              return { ...item, alreadyImported: true };
+              return {
+                ...item,
+                alreadyImported: true,
+                localProductId: result.data.productId,
+              };
             }
             return item;
           }),
@@ -267,11 +230,26 @@ export function CreateProductFromKinguinForm({
   }
 
   const importableResults = results.filter((item) => !item.alreadyImported);
+  const importedResults = results.filter((item) => item.alreadyImported);
   const displayedResults = hideAlreadyImported ? importableResults : results;
+  const selectedImportCount = selectedIds.filter((productId) =>
+    results.some(
+      (item) => item.productId === productId && !item.alreadyImported,
+    ),
+  ).length;
+  const selectedDeleteItems = selectedIds.flatMap((productId) => {
+    const item = results.find((result) => result.productId === productId);
+    if (!item?.alreadyImported || !item.localProductId) {
+      return [];
+    }
+    return [item];
+  });
+  const selectedDeleteCount = selectedDeleteItems.length;
+  const isBusy = isSearching || isImporting || isBulkImporting || isDeleting;
 
   function handleSelectAll(checked: boolean) {
     if (checked) {
-      setSelectedIds(importableResults.map((item) => item.productId));
+      setSelectedIds(displayedResults.map((item) => item.productId));
     } else {
       setSelectedIds([]);
     }
@@ -349,6 +327,9 @@ export function CreateProductFromKinguinForm({
       const importedKinguinProductIds = new Set(
         imported.map((item) => item.kinguinProductId),
       );
+      const importedByKinguinProductId = new Map(
+        imported.map((item) => [item.kinguinProductId, item.productId]),
+      );
 
       setBulkImportProgress({
         current: requestedCount,
@@ -386,7 +367,12 @@ export function CreateProductFromKinguinForm({
       setResults((prev) =>
         prev.map((item) => {
           if (importedKinguinProductIds.has(item.productId)) {
-            return { ...item, alreadyImported: true };
+            return {
+              ...item,
+              alreadyImported: true,
+              localProductId:
+                importedByKinguinProductId.get(item.productId) ?? null,
+            };
           }
           return item;
         }),
@@ -405,6 +391,83 @@ export function CreateProductFromKinguinForm({
       setIsBulkImporting(false);
       setBulkImportProgress(null);
     }
+  }
+
+  function handleDeleteImported(item: KinguinSearchResultItem) {
+    if (!item.localProductId) {
+      toast.error("No se encontró el producto local para eliminar.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `¿Eliminar «${item.name}» del catálogo? Podrás volver a importarlo desde Kinguin.`,
+      )
+    ) {
+      return;
+    }
+
+    startDelete(async () => {
+      const toastId = toast.loading("Eliminando producto...");
+      const result = await deleteProductAction(item.localProductId!);
+
+      if (!result.success) {
+        toast.error(result.error, { id: toastId });
+        return;
+      }
+
+      toast.success(result.message ?? "Producto eliminado", { id: toastId });
+      setResults((prev) =>
+        prev.map((row) =>
+          row.productId === item.productId
+            ? { ...row, alreadyImported: false, localProductId: null }
+            : row,
+        ),
+      );
+      setSelectedIds((prev) => prev.filter((id) => id !== item.productId));
+      router.refresh();
+    });
+  }
+
+  function handleBulkDelete() {
+    const localIds = selectedDeleteItems.map((item) => item.localProductId!);
+    if (localIds.length === 0) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `¿Eliminar ${localIds.length} producto${localIds.length === 1 ? "" : "s"} importado${localIds.length === 1 ? "" : "s"} del catálogo?`,
+      )
+    ) {
+      return;
+    }
+
+    startDelete(async () => {
+      const toastId = toast.loading("Eliminando productos...");
+      const result = await bulkDeleteProductsAction(localIds);
+
+      if (!result.success) {
+        toast.error(result.error, { id: toastId });
+        return;
+      }
+
+      toast.success(result.message ?? "Productos eliminados", { id: toastId });
+      const deletedKinguinProductIds = new Set(
+        selectedDeleteItems.map((item) => item.productId),
+      );
+      setResults((prev) =>
+        prev.map((row) =>
+          deletedKinguinProductIds.has(row.productId)
+            ? { ...row, alreadyImported: false, localProductId: null }
+            : row,
+        ),
+      );
+      setSelectedIds((prev) =>
+        prev.filter((id) => !deletedKinguinProductIds.has(id)),
+      );
+      router.refresh();
+    });
   }
 
   if (!kinguinConfigured) {
@@ -444,16 +507,11 @@ export function CreateProductFromKinguinForm({
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Ej. Elden Ring Steam"
                     autoComplete="off"
-                    disabled={isSearching || isImporting || isBulkImporting}
+                    disabled={isBusy}
                   />
                   <Button
                     type="submit"
-                    disabled={
-                      isSearching ||
-                      isImporting ||
-                      isBulkImporting ||
-                      query.trim().length < 3
-                    }
+                    disabled={isBusy || query.trim().length < 3}
                     className="shrink-0"
                   >
                     {isSearching ? (
@@ -588,18 +646,24 @@ export function CreateProductFromKinguinForm({
                 id="hide-imported"
                 checked={hideAlreadyImported}
                 onCheckedChange={(checked) => setHideAlreadyImported(!!checked)}
-                disabled={isSearching || isImporting || isBulkImporting}
+                disabled={isBusy}
               />
               <label
                 htmlFor="hide-imported"
                 className="text-sm font-medium leading-none cursor-pointer select-none text-muted-foreground hover:text-foreground"
               >
                 Ocultar ya importados
+                {importedResults.length > 0 ? (
+                  <span className="text-muted-foreground/80">
+                    {" "}
+                    ({importedResults.length} en esta página)
+                  </span>
+                ) : null}
               </label>
             </div>
           </div>
 
-          {importableResults.length > 0 ? (
+          {displayedResults.length > 0 ? (
             <Card className="p-4 border-border bg-card/50">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-6">
@@ -607,68 +671,86 @@ export function CreateProductFromKinguinForm({
                     <Checkbox
                       id="select-all"
                       checked={
-                        selectedIds.length === importableResults.length &&
-                        importableResults.length > 0
+                        selectedIds.length === displayedResults.length &&
+                        displayedResults.length > 0
                       }
                       onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                      disabled={isSearching || isImporting || isBulkImporting}
+                      disabled={isBusy}
                     />
                     <label
                       htmlFor="select-all"
                       className="text-sm font-medium leading-none cursor-pointer select-none"
                     >
-                      Seleccionar todo ({importableResults.length})
+                      Seleccionar todo ({displayedResults.length})
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="bulk-translate-with-ai"
-                      checked={translateWithAi}
-                      onCheckedChange={(checked) =>
-                        setTranslateWithAi(!!checked)
-                      }
-                      disabled={
-                        !openAiConfigured ||
-                        isSearching ||
-                        isImporting ||
-                        isBulkImporting
-                      }
-                    />
-                    <label
-                      htmlFor="bulk-translate-with-ai"
-                      className="text-sm font-medium leading-none cursor-pointer select-none flex items-center gap-1.5"
-                    >
-                      Traducir y mejorar con IA
-                      {!openAiConfigured && (
-                        <span className="text-xs text-destructive font-normal">
-                          (No configurado)
-                        </span>
-                      )}
-                    </label>
-                  </div>
+                  {importableResults.length > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="bulk-translate-with-ai"
+                        checked={translateWithAi}
+                        onCheckedChange={(checked) =>
+                          setTranslateWithAi(!!checked)
+                        }
+                        disabled={!openAiConfigured || isBusy}
+                      />
+                      <label
+                        htmlFor="bulk-translate-with-ai"
+                        className="text-sm font-medium leading-none cursor-pointer select-none flex items-center gap-1.5"
+                      >
+                        Traducir y mejorar con IA
+                        {!openAiConfigured && (
+                          <span className="text-xs text-destructive font-normal">
+                            (No configurado)
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                  ) : null}
                 </div>
 
-                <Button
-                  type="button"
-                  onClick={handleBulkImport}
-                  disabled={
-                    selectedIds.length === 0 ||
-                    isSearching ||
-                    isImporting ||
-                    isBulkImporting
-                  }
-                  className="sm:w-auto w-full"
-                >
-                  {isBulkImporting ? (
-                    <>
-                      <Spinner className="size-4" />
-                      Importando...
-                    </>
-                  ) : (
-                    `Importar seleccionados (${selectedIds.length})`
-                  )}
-                </Button>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  {selectedDeleteCount > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleBulkDelete}
+                      disabled={isBusy}
+                      className="sm:w-auto w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Spinner className="size-4" />
+                          Eliminando...
+                        </>
+                      ) : (
+                        <>
+                          <IconTrash className="size-4" />
+                          Eliminar importados ({selectedDeleteCount})
+                        </>
+                      )}
+                    </Button>
+                  ) : null}
+
+                  {importableResults.length > 0 ? (
+                    <Button
+                      type="button"
+                      onClick={handleBulkImport}
+                      disabled={selectedImportCount === 0 || isBusy}
+                      className="sm:w-auto w-full"
+                    >
+                      {isBulkImporting ? (
+                        <>
+                          <Spinner className="size-4" />
+                          Importando...
+                        </>
+                      ) : (
+                        `Importar seleccionados (${selectedImportCount})`
+                      )}
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </Card>
           ) : null}
@@ -682,7 +764,8 @@ export function CreateProductFromKinguinForm({
                 <EmptyTitle>Todos importados</EmptyTitle>
                 <EmptyDescription>
                   Todos los resultados de esta búsqueda ya están en tu catálogo
-                  local.
+                  local. Desactiva &quot;Ocultar ya importados&quot; para
+                  seleccionarlos y eliminarlos.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -698,22 +781,16 @@ export function CreateProductFromKinguinForm({
                       key={`${item.kinguinId}-${item.productId}`}
                       className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center"
                     >
-                      {!item.alreadyImported ? (
-                        <div className="flex items-center justify-center shrink-0 sm:pr-1">
-                          <Checkbox
-                            checked={selectedIds.includes(item.productId)}
-                            onCheckedChange={(checked) =>
-                              handleSelectRow(item.productId, !!checked)
-                            }
-                            disabled={
-                              isSearching || isImporting || isBulkImporting
-                            }
-                            aria-label={`Seleccionar ${item.name}`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="size-4 shrink-0" />
-                      )}
+                      <div className="flex items-center justify-center shrink-0 sm:pr-1">
+                        <Checkbox
+                          checked={selectedIds.includes(item.productId)}
+                          onCheckedChange={(checked) =>
+                            handleSelectRow(item.productId, !!checked)
+                          }
+                          disabled={isBusy}
+                          aria-label={`Seleccionar ${item.name}`}
+                        />
+                      </div>
 
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         {item.coverImageUrl ? (
@@ -754,26 +831,56 @@ export function CreateProductFromKinguinForm({
                         <ChileExclusionIndicator
                           countryLimitations={item.countryLimitations}
                         />
-                        <Button
-                          type="button"
-                          className="shrink-0 sm:w-auto"
-                          disabled={
-                            item.alreadyImported ||
-                            isSearching ||
-                            isRowImporting ||
-                            isBulkImporting
-                          }
-                          onClick={() => openImportDialog(item)}
-                        >
-                          {isRowImporting ? (
-                            <>
-                              <Spinner className="size-4" />
-                              Importando…
-                            </>
-                          ) : (
-                            "Importar"
-                          )}
-                        </Button>
+                        {item.alreadyImported ? (
+                          <>
+                            {item.localProductId ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="shrink-0 sm:w-auto"
+                                asChild
+                              >
+                                <Link
+                                  href={`/admin/products/${item.localProductId}/edit`}
+                                >
+                                  Editar
+                                </Link>
+                              </Button>
+                            ) : null}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="shrink-0 sm:w-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              disabled={isBusy || !item.localProductId}
+                              onClick={() => handleDeleteImported(item)}
+                            >
+                              {isDeleting ? (
+                                <Spinner className="size-4" />
+                              ) : (
+                                <>
+                                  <IconTrash className="size-4" />
+                                  Eliminar
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            className="shrink-0 sm:w-auto"
+                            disabled={isBusy || isRowImporting}
+                            onClick={() => openImportDialog(item)}
+                          >
+                            {isRowImporting ? (
+                              <>
+                                <Spinner className="size-4" />
+                                Importando…
+                              </>
+                            ) : (
+                              "Importar"
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </li>
                   );
