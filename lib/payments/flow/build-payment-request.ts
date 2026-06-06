@@ -1,7 +1,7 @@
-import {
-  flowConfirmationUrl,
-  flowReturnUrl,
-} from "@/lib/payments/flow/config";
+import { flowConfirmationUrl, flowReturnUrl } from "@/lib/payments/flow/config";
+
+/** Segundos que Flow mantiene activa la sesión de pago (API `timeout`). */
+export const FLOW_PAYMENT_TIMEOUT_SECONDS = 3600;
 
 type BuildFlowPaymentInput = {
   commerceOrder: string;
@@ -38,6 +38,6 @@ export function buildFlowPaymentRequest(
     currency: "CLP",
     urlConfirmation: flowConfirmationUrl(),
     urlReturn: flowReturnUrl(),
-    timeout: 3600,
+    timeout: FLOW_PAYMENT_TIMEOUT_SECONDS,
   };
 }
