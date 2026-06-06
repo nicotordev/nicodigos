@@ -19,14 +19,14 @@ import { storeRoutes } from "@/lib/store/navigation";
 export const metadata: Metadata = {
   title: "Categorías | Nicodigos",
   description:
-    "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
+    "Explora keys Steam, gift cards PSN y Xbox, licencias de software y suscripciones digitales en Chile.",
   alternates: {
     canonical: "/categories",
   },
   openGraph: {
     title: "Categorías de Productos Digitales | Nicodigos",
     description:
-      "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
+      "Explora keys Steam, gift cards PSN y Xbox, licencias de software y suscripciones digitales en Chile.",
     type: "website",
     url: "/categories",
   },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Categorías de Productos Digitales | Nicodigos",
     description:
-      "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
+      "Explora keys Steam, gift cards PSN y Xbox, licencias de software y suscripciones digitales en Chile.",
   },
 };
 
@@ -48,7 +48,7 @@ export default async function CategoriesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Compact header — mobile / tablet */}
-      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 lg:hidden">
+      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 md:hidden">
         <div className="mx-auto w-full max-w-7xl space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-primary">
             {categories.length} {categoryCountLabel}
@@ -68,7 +68,7 @@ export default async function CategoriesPage() {
       </header>
 
       {/* Cinematic hero — desktop */}
-      <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden bg-black lg:flex">
+      <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden bg-black md:flex">
         <div className="absolute inset-0 z-0">
           <div className="h-full w-full bg-gradient-to-br from-primary/30 via-black to-indigo-950/80" />
           <div className="absolute inset-0 z-10 bg-black/55" />
@@ -103,7 +103,7 @@ export default async function CategoriesPage() {
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:gap-8 lg:px-8 lg:py-10">
         {/* Section intro — desktop */}
-        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 lg:flex lg:flex-row lg:items-center">
+        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 md:flex md:flex-row md:items-center">
           <div className="space-y-1">
             <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-foreground md:text-3xl">
               Explorar por Categoría
@@ -120,7 +120,7 @@ export default async function CategoriesPage() {
         </div>
 
         {/* Section intro — mobile */}
-        <div className="space-y-1 lg:hidden">
+        <div className="space-y-1 md:hidden">
           <h2 className="font-heading text-base font-semibold text-foreground">
             Explorar por categoría
           </h2>

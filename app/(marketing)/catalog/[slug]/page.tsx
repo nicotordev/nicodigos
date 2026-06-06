@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main className="flex-1 bg-background">
-      <div className="mx-auto px-4 py-10 sm:px-6 sm:py-16 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto px-4 py-6 pb-24 sm:px-6 sm:py-10 md:pb-10 md:py-16 lg:max-w-7xl lg:px-8">
         <nav
           aria-label="Breadcrumb"
           className="mb-8 flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-muted-foreground/80 bg-muted/20 w-fit px-3.5 py-1.5 rounded-full border border-border/40"
@@ -303,7 +303,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="lg:hidden fixed bottom-16 inset-x-0 bg-background/95 backdrop-blur-md border-t border-border/80 p-4 z-40 flex items-center justify-between gap-4 shadow-lg safe-bottom">
         <div className="min-w-0">
           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-            Total
+            Total a pagar
           </p>
           <p className="text-lg font-black text-primary tabular-nums">
             {formatMoney(product.sellPrice)}

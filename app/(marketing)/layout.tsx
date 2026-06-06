@@ -13,7 +13,7 @@ export default function MarketingLayout({
   return (
     <QueryProvider>
       <TooltipProvider delayDuration={200}>
-        <div className="flex min-h-full flex-col pb-16 lg:pb-0">
+        <div className="flex min-h-full flex-col pb-16 md:pb-0">
           <MarketingHeader />
           {children}
           <Footer />

@@ -29,7 +29,7 @@ export function CategoriesListPageSkeleton() {
       aria-busy="true"
       aria-label="Cargando categorías"
     >
-      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 lg:hidden">
+      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 md:hidden">
         <div className="mx-auto w-full max-w-7xl space-y-3">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-7 w-40" />
@@ -41,7 +41,7 @@ export function CategoriesListPageSkeleton() {
         </div>
       </header>
 
-      <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden lg:flex">
+      <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden md:flex">
         <Skeleton className="absolute inset-0 rounded-none" />
         <div className="relative z-20 flex max-w-3xl flex-col items-center gap-4 px-6 text-center">
           <Skeleton className="h-8 w-32 rounded-full" />
@@ -51,7 +51,7 @@ export function CategoriesListPageSkeleton() {
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:gap-8 lg:px-8 lg:py-10">
-        <div className="hidden border-b border-border/80 pb-6 lg:block">
+        <div className="hidden border-b border-border/80 pb-6 md:block">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="mt-2 h-4 w-80" />
         </div>

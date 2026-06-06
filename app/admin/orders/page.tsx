@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AdminOrdersBoard } from "@/components/admin/admin-orders-board";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { getAdminOrders } from "@/lib/admin/orders/queries";
@@ -16,7 +17,9 @@ export default async function AdminOrdersPage() {
         title="Pedidos"
         description="Historial de compras, estados y claves entregadas."
       />
-      <AdminOrdersBoard orders={orders} />
+      <Suspense fallback={null}>
+        <AdminOrdersBoard orders={orders} />
+      </Suspense>
     </div>
   );
 }

@@ -1,218 +1,153 @@
 import Link from "next/link";
-import { IconArrowLeft } from "@tabler/icons-react";
-import { AdminRetryKinguinButton } from "@/components/admin/admin-retry-kinguin-button";
-import { ManualFulfillmentPanel } from "@/components/admin/manual-fulfillment-panel";
+import {
+  IconArrowLeft,
+  IconCalendar,
+  IconCreditCard,
+  IconUser,
+} from "@tabler/icons-react";
+
+import { OrderDetailWorkspace } from "@/components/admin/order-detail-workspace";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { OrderTransactionsCard } from "@/components/admin/order-transactions-card";
 import type { AdminOrderDetail } from "@/lib/admin/orders/types";
 import { formatDate, formatMoney } from "@/lib/admin/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type AdminOrderDetailViewProps = {
   order: AdminOrderDetail;
 };
 
-export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
+function MetaItem({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="min-w-0 space-y-0.5">
+      <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <Icon className="size-3.5 shrink-0" />
+        {label}
+      </p>
+      <div className="text-sm text-foreground">{children}</div>
+    </div>
+  );
+}
+
+export function AdminOrderDetailView({ order }: AdminOrderDetailViewProps) {
+  const shortId = order.id.slice(0, 8);
+  const extraKeyCount = order.items.reduce(
+    (sum, item) => sum + Math.max(item.deliveredKeyCount - item.quantity, 0),
+    0,
+  );
+
+  return (
+    <div className="mx-auto w-full max-w-6xl space-y-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2 w-fit">
         <Link href="/admin/orders">
           <IconArrowLeft className="size-4" />
-          Volver a pedidos
+          Pedidos
         </Link>
       </Button>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="font-heading text-2xl font-bold tracking-tight">
-            Pedido
-          </h1>
-          <p className="font-mono text-sm text-muted-foreground">{order.id}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <OrderStatusBadge status={order.status} className="text-sm" />
-          {order.needsManualFulfillment ? (
-            <Badge
-              variant="outline"
-              className="border-amber-500/40 text-amber-700 dark:text-amber-400"
-            >
-              Entrega manual
-            </Badge>
-          ) : null}
-          {order.status === "PROCESSING" && !order.needsManualFulfillment ? (
-            <AdminRetryKinguinButton orderId={order.id} />
-          ) : null}
-        </div>
-      </div>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <OrderStatusBadge status={order.status} />
+                {order.needsManualFulfillment ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/40 text-amber-700 dark:text-amber-400"
+                  >
+                    Entrega manual
+                  </Badge>
+                ) : null}
+                {order.isPreorder ? (
+                  <Badge variant="outline">Preventa</Badge>
+                ) : null}
+              </div>
+              <div>
+                <h1 className="font-heading text-2xl font-bold tracking-tight">
+                  Pedido #{shortId}
+                </h1>
+                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                  {order.id}
+                </p>
+              </div>
+            </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total</CardDescription>
-            <CardTitle className="text-xl tabular-nums">
-              {formatMoney(order.total, order.currency)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            Subtotal {formatMoney(order.subtotal, order.currency)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Cliente</CardDescription>
-            <CardTitle className="text-base">
+            <div className="sm:text-right">
+              <p className="text-3xl font-bold tabular-nums tracking-tight">
+                {formatMoney(order.total, order.currency)}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Subtotal {formatMoney(order.subtotal, order.currency)}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {order.deliveredKeyCount}/{order.expectedKeyCount} keys
+                {extraKeyCount > 0 ? ` (+${extraKeyCount} extra)` : ""}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            <MetaItem icon={IconUser} label="Cliente">
               <Link
                 href={`/admin/users/${order.customer.id}`}
-                className="hover:text-primary hover:underline"
+                className="font-medium hover:text-primary hover:underline"
               >
                 {order.customer.name}
               </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm text-muted-foreground">
-            <p>{order.customer.email}</p>
-            <p>Rol: {order.customer.role}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Fechas</CardDescription>
-            <CardTitle className="text-base font-normal text-foreground">
-              {formatDate(order.createdAt)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            Actualizado {formatDate(order.updatedAt)}
-          </CardContent>
-        </Card>
-      </div>
-
-      <OrderTransactionsCard transactions={order.transactions} />
-
-      <ManualFulfillmentPanel order={order} />
-
-      {(order.kinguinOrderId ||
-        order.isPreorder ||
-        order.needsManualFulfillment) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Kinguin</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {order.kinguinOrderId ? (
-              <p>
-                <span className="text-muted-foreground">Order ID: </span>
-                <span className="font-mono">{order.kinguinOrderId}</span>
+              <p className="truncate text-muted-foreground">
+                {order.customer.email}
               </p>
-            ) : null}
-            {order.kinguinStatus ? (
-              <p>
-                <span className="text-muted-foreground">Estado: </span>
-                {order.kinguinStatus}
+            </MetaItem>
+
+            <MetaItem icon={IconCreditCard} label="Facturación">
+              <p>{order.billing.fullName || "—"}</p>
+              <p className="truncate text-muted-foreground">
+                {order.billing.email || order.customer.email}
               </p>
-            ) : (
+            </MetaItem>
+
+            <MetaItem icon={IconCalendar} label="Creado">
+              <p>{formatDate(order.createdAt)}</p>
               <p className="text-muted-foreground">
-                Sin pedido en Kinguin todavía (revisa precio EUR y stock de keys
-                texto).
+                Actualizado {formatDate(order.updatedAt)}
               </p>
-            )}
-            {order.isPreorder ? (
-              <Badge variant="outline">Preorder</Badge>
-            ) : null}
-            {order.preorderReleaseAt ? (
-              <p className="text-muted-foreground">
-                Lanzamiento: {formatDate(order.preorderReleaseAt)}
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
-      )}
+            </MetaItem>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ítems del pedido</CardTitle>
-          <CardDescription>
-            {order.items.length} línea{order.items.length === 1 ? "" : "s"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {order.items.map((item) => (
-            <div
-              key={item.id}
-              className="space-y-3 rounded-xl border border-border p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Kinguin {item.kinguinProductId}
-                    {item.productId ? (
-                      <>
-                        {" "}
-                        ·{" "}
-                        <Link
-                          href={`/admin/products/${item.productId}/edit`}
-                          className="text-primary hover:underline"
-                        >
-                          Editar producto
-                        </Link>
-                      </>
-                    ) : null}
+            {(order.kinguinOrderId || order.kinguinStatus) && (
+              <MetaItem icon={IconCreditCard} label="Kinguin">
+                {order.kinguinOrderId ? (
+                  <p className="truncate font-mono text-xs">
+                    {order.kinguinOrderId}
                   </p>
-                </div>
-                <p className="font-medium tabular-nums">
-                  {formatMoney(item.lineTotal, order.currency)} ×{" "}
-                  {item.quantity}
-                </p>
-              </div>
-              {item.keys.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Key</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Serial</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {item.keys.map((key) => (
-                      <TableRow key={key.id}>
-                        <TableCell className="font-mono text-xs">
-                          {key.kinguinKeyId}
-                        </TableCell>
-                        <TableCell>{key.status}</TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {key.serialMasked}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Sin claves registradas aún.
-                </p>
-              )}
-            </div>
-          ))}
+                ) : null}
+                {order.kinguinStatus ? (
+                  <p className="line-clamp-2 text-xs text-muted-foreground">
+                    {order.kinguinStatus}
+                  </p>
+                ) : null}
+              </MetaItem>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      <OrderDetailWorkspace order={order} />
+
+      <OrderTransactionsCard transactions={order.transactions} />
     </div>
   );
 }

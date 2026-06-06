@@ -18,7 +18,7 @@ interface MobileFilterSheetProps {
 
 export function MobileFilterSheet({ children }: MobileFilterSheetProps) {
   return (
-    <div className="flex w-full items-center justify-between border-b border-border py-2 lg:hidden">
+    <div className="flex w-full items-center justify-between border-b border-border py-2 md:hidden">
       <Sheet>
         <SheetTrigger asChild>
           <Button

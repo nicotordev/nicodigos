@@ -15,7 +15,7 @@ import { storeRoutes } from "@/lib/store/navigation";
 import { cn } from "@/lib/utils";
 
 export const categoryCardGridClassName =
-  "flex flex-col gap-2 sm:gap-3 lg:grid lg:grid-cols-3 lg:gap-6 xl:grid-cols-4";
+  "flex flex-col gap-2 sm:gap-3 md:grid md:grid-cols-3 md:gap-6 xl:grid-cols-4";
 
 export const categoryCardImageSizes =
   "(max-width: 1024px) 72px, (max-width: 1280px) 33vw, 25vw";
@@ -52,7 +52,7 @@ function CategoryCardTile({ category, className }: CategoryCardProps) {
     <Link
       href={storeRoutes.category(category.slug)}
       className={cn(
-        "group flex min-h-11 items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 ring-1 ring-border/40 transition-colors duration-200 hover:border-primary/30 hover:bg-muted/30 active:scale-[0.98] motion-reduce:active:scale-100 sm:gap-4 sm:px-4 lg:hidden",
+        "group flex min-h-11 items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 ring-1 ring-border/40 transition-colors duration-200 hover:border-primary/30 hover:bg-muted/30 active:scale-[0.98] motion-reduce:active:scale-100 sm:gap-4 sm:px-4 md:hidden",
         className,
       )}
     >
@@ -100,7 +100,7 @@ function CategoryCardGrid({ category, className }: CategoryCardProps) {
   return (
     <Link
       href={storeRoutes.category(category.slug)}
-      className={cn("group hidden h-full lg:block", className)}
+      className={cn("group hidden h-full md:block", className)}
     >
       <Card className="glass-card glass-card-hover h-full overflow-hidden rounded-2xl border-border bg-card pt-0! flex flex-col">
         <CardHeader className="relative aspect-4/3 overflow-hidden bg-muted p-0! xl:aspect-[5/4]">

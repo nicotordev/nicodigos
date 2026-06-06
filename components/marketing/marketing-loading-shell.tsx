@@ -26,7 +26,7 @@ const orbVariants = {
 export function MarketingLoadingShell({
   children,
   className,
-  contentClassName = "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 relative z-10",
+  contentClassName = "mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-10 lg:px-8 relative z-10",
   variant = "default",
 }: MarketingLoadingShellProps) {
   const orbs = orbVariants[variant];
@@ -36,16 +36,16 @@ export function MarketingLoadingShell({
       className={cn("flex-1 relative overflow-hidden bg-background", className)}
       aria-busy="true"
     >
-      <div className="absolute inset-0 admin-dashboard-grid opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 admin-dashboard-grid opacity-20 pointer-events-none hidden md:block" />
       <div
         className={cn(
-          "absolute top-[-10%] right-[-10%] -z-10 h-[500px] w-[500px] rounded-full blur-[130px] pointer-events-none",
+          "absolute top-[-10%] right-[-10%] -z-10 hidden h-[500px] w-[500px] rounded-full blur-[130px] pointer-events-none md:block",
           orbs.primary,
         )}
       />
       <div
         className={cn(
-          "absolute bottom-[-10%] left-[-10%] -z-10 h-[400px] w-[400px] rounded-full blur-[110px] pointer-events-none",
+          "absolute bottom-[-10%] left-[-10%] -z-10 hidden h-[400px] w-[400px] rounded-full blur-[110px] pointer-events-none md:block",
           orbs.secondary,
         )}
       />

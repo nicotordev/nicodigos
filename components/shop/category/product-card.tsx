@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import {
   Heart,
   ImageIcon,
@@ -13,6 +15,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { playSound } from "@/lib/sounds";
+import { addToCartAction } from "@/lib/store/cart/actions";
 import { storeRoutes } from "@/lib/store/navigation";
 import { cn } from "@/lib/utils";
 import type { CategoryProduct } from "./types";
@@ -31,6 +35,9 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const imageSrc =
     product.coverImageUrl ||
     product.images.find((img) => img.isCover)?.url ||
@@ -42,10 +49,18 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || isPending) return;
 
-    toast.success(`¡"${product.name}" agregado al carrito!`, {
-      description: "Puedes revisar tu carrito para proceder con el pago.",
+    startTransition(async () => {
+      const result = await addToCartAction(product.id, 1);
+      if (!result.success) {
+        playSound("caution");
+        toast.error(result.error);
+        return;
+      }
+      playSound("notification");
+      toast.success(result.message ?? `"${product.name}" agregado al carrito.`);
+      router.refresh();
     });
   };
 
@@ -127,7 +142,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               variant="default"
               size="icon"
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || isPending}
               className="h-9 w-9 rounded-xl bg-primary text-primary-foreground shadow-lg transition-transform duration-200 hover:scale-105 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleAddToCart}
               aria-label="Agregar al carrito"

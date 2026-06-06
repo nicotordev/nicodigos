@@ -8,7 +8,7 @@ import { storeRoutes } from "@/lib/store/navigation";
 export const metadata: Metadata = {
   title: "Cómo funciona | Nicodigos",
   description:
-    "Compra keys, gift cards y licencias digitales en cinco pasos: elige, paga y recibe tu código al instante.",
+    "Aprende a comprar keys Steam, gift cards y licencias en Chile en cinco pasos: elige, paga y recibe tu código al tiro.",
   alternates: {
     canonical: "/how-it-works",
   },
@@ -17,17 +17,17 @@ export const metadata: Metadata = {
 export default function HowItWorksPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <section className="border-b border-border/60 bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
+      <section className="border-b border-border/60 bg-muted/20 px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl space-y-4 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-primary">
             Ayuda
           </p>
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Cómo funciona Nicodigos
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+            Cómo comprar keys y gift cards en Chile
           </h1>
           <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Compra códigos digitales con precio en pesos chilenos, entrega
-            automática y soporte local si necesitas ayuda con la activación.
+            Cinco pasos nomás: eliges tu producto, pagas en pesos chilenos y
+            recibes tu código al tiro con soporte local si necesitas ayuda.
           </p>
         </div>
       </section>

@@ -1,9 +1,12 @@
-import { MarketingLoadingShell } from "@/components/marketing/marketing-loading-shell";
+import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function CheckoutReturnPageSkeleton() {
   return (
-    <MarketingLoadingShell contentClassName="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8 relative z-10">
+    <MarketingPageShell
+      narrow
+      contentClassName="flex min-h-[50vh] items-center justify-center py-8 md:py-10"
+    >
       <div
         className="rounded-3xl border border-border/60 bg-card p-8 sm:p-10 space-y-6 text-center"
         aria-busy="true"
@@ -18,6 +21,6 @@ export function CheckoutReturnPageSkeleton() {
           <Skeleton className="h-11 w-full rounded-xl sm:w-40" />
         </div>
       </div>
-    </MarketingLoadingShell>
+    </MarketingPageShell>
   );
 }

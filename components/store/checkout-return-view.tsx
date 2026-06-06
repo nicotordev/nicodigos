@@ -494,11 +494,11 @@ function CheckoutReturnShell({
           : "bg-primary/10";
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-16 relative overflow-hidden bg-background min-h-[calc(100vh-4rem)]">
-      <div className="absolute inset-0 admin-dashboard-grid opacity-20 pointer-events-none" />
+    <main className="relative flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center overflow-hidden bg-background px-4 py-8 md:py-16">
+      <div className="pointer-events-none absolute inset-0 admin-dashboard-grid opacity-20 hidden md:block" />
       <div
         className={cn(
-          "absolute inset-0 -z-10 blur-[150px] opacity-35 pointer-events-none rounded-full w-[560px] h-[560px] mx-auto my-auto",
+          "pointer-events-none absolute inset-0 -z-10 mx-auto my-auto hidden h-[560px] w-[560px] rounded-full opacity-35 blur-[150px] md:block",
           orb,
         )}
         aria-hidden

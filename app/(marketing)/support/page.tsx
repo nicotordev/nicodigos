@@ -13,7 +13,7 @@ import { storeRoutes } from "@/lib/store/navigation";
 export const metadata: Metadata = {
   title: "Soporte | Nicodigos",
   description:
-    "Centro de ayuda de Nicodigos: contacto, estado de pedidos y asistencia para activar tus keys digitales.",
+    "Soporte en Chile para activar keys Steam, gift cards y códigos digitales. Contacto, pedidos y ayuda con tu compra.",
   alternates: {
     canonical: "/support",
   },
@@ -45,8 +45,8 @@ const supportTopics = [
 
 export default function SupportPage() {
   return (
-    <main className="flex-1 bg-background py-16 sm:py-24">
-      <div className="mx-auto max-w-3xl space-y-12 px-4 sm:px-6 lg:px-8">
+    <main className="flex-1 bg-background py-10 sm:py-16 md:py-24">
+      <div className="mx-auto max-w-3xl space-y-8 px-4 sm:space-y-12 sm:px-6 lg:px-8">
         <div className="space-y-4 border-b border-border/40 pb-8 text-center sm:text-left">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             Soporte

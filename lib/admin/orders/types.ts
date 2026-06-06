@@ -9,11 +9,14 @@ export type AdminOrderListItem = {
   createdAt: string;
   customerName: string;
   customerEmail: string;
+  customerUserId: string;
   itemCount: number;
   kinguinOrderId: string | null;
   isPreorder: boolean;
   needsManualFulfillment: boolean;
   manualFulfillmentNote: string | null;
+  expectedKeyCount: number;
+  deliveredKeyCount: number;
   pendingKeyCount: number;
 };
 
@@ -22,6 +25,7 @@ export type AdminOrderKeyDetail = {
   kinguinKeyId: string;
   status: string;
   contentType: string;
+  serial: string;
   serialMasked: string;
 };
 
@@ -59,6 +63,20 @@ export type AdminOrderDetail = {
     name: string;
     email: string;
     role: string;
+  };
+  billing: {
+    documentType: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    rut: string;
+    giro: string;
+    companyName: string;
+    region: string;
+    commune: string;
+    city: string;
+    street: string;
+    unit: string;
   };
   items: AdminOrderItemDetail[];
   transactions: AdminTransactionListItem[];

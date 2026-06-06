@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { toast } from "sonner";
 
@@ -28,6 +29,7 @@ export function ProductStoreActions({
   compact = false,
   split = false,
 }: ProductStoreActionsProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(inWishlist);
 
@@ -41,6 +43,7 @@ export function ProductStoreActions({
       }
       playSound("notification");
       toast.success(result.message ?? "Agregado al carrito.");
+      router.refresh();
     });
   }
 
@@ -55,6 +58,7 @@ export function ProductStoreActions({
       setSaved(result.data?.inWishlist ?? !saved);
       playSound(result.data?.inWishlist ? "toggleOn" : "toggleOff");
       toast.success(result.message);
+      router.refresh();
     });
   }
 

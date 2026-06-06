@@ -54,11 +54,11 @@ export default function HeroSection({ products, hasOffers }: HeroSectionProps) {
                 variant="outline"
                 className="rounded-full border-border/80 bg-background/80 px-3 py-1 text-sm font-medium text-muted-foreground backdrop-blur-sm"
               >
-                Tu tienda digital chilena
+                Marketplace digital para Chile
               </Badge>
             </div>
 
-            <h1 className="font-heading text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl px-4 sm:px-6 lg:px-8">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl md:text-5xl lg:text-6xl px-4 sm:px-6 lg:px-8">
               <span className="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
                 <span>
                   Consigue tus keys, gift cards y licencias al tiro{" "}
@@ -75,9 +75,9 @@ export default function HeroSection({ products, hasOffers }: HeroSectionProps) {
             </h1>
 
             <p className="mt-6 text-base font-medium text-pretty text-muted-foreground sm:mt-8 sm:text-lg/8">
-              Keys, software y suscripciones con entrega al instante, stock
-              real y soporte chileno siempre atento. Compra al toque, sin
-              enredos ni letra chica.
+              Keys, software y suscripciones con entrega al instante, stock real
+              y soporte chileno siempre atento. Compra al toque, sin enredos ni
+              letra chica.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">

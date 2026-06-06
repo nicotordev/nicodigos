@@ -1,4 +1,4 @@
-import { MarketingLoadingShell } from "@/components/marketing/marketing-loading-shell";
+import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import {
   CheckoutFormSkeleton,
   CheckoutStepsSkeleton,
@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CheckoutPageSkeleton() {
   return (
-    <MarketingLoadingShell contentClassName="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 relative z-10 space-y-8">
+    <MarketingPageShell narrow contentClassName="space-y-6 md:space-y-8">
       <CheckoutStepsSkeleton />
 
       <div className="space-y-2 border-b border-border/10 pb-6">
@@ -17,6 +17,6 @@ export function CheckoutPageSkeleton() {
       </div>
 
       <CheckoutFormSkeleton />
-    </MarketingLoadingShell>
+    </MarketingPageShell>
   );
 }

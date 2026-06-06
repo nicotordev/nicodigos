@@ -17,7 +17,7 @@ function revalidateStorePaths() {
   revalidatePath(storeRoutes.cart);
   revalidatePath(storeRoutes.wishlist);
   revalidatePath(storeRoutes.checkoutReturn);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }
 
 async function requireCartItemOwner(itemId: string, userId: string) {

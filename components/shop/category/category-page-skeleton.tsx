@@ -33,7 +33,7 @@ function CategoryProductSkeleton({ count = 8 }: CategoryProductSkeletonProps) {
 function CategoryHeroSkeleton() {
   return (
     <>
-      <header className="relative overflow-hidden border-b border-border/80 bg-background lg:hidden">
+      <header className="relative overflow-hidden border-b border-border/80 bg-background md:hidden">
         <Skeleton className="h-36 w-full rounded-none sm:h-44" />
         <div className="mx-auto w-full max-w-7xl space-y-3 px-4 pb-5 pt-6 sm:px-6">
           <Skeleton className="h-3 w-24" />
@@ -48,7 +48,7 @@ function CategoryHeroSkeleton() {
         </div>
       </header>
 
-      <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden lg:flex">
+      <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden md:flex">
         <Skeleton className="absolute inset-0 rounded-none" />
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-20 mt-16 flex max-w-3xl flex-col items-center gap-4 px-6 text-center">
@@ -102,8 +102,8 @@ export function CategoryPageSkeleton() {
     >
       <CategoryHeroSkeleton />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:gap-8 lg:px-8 lg:py-10">
-        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 lg:flex lg:flex-row lg:items-center">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 md:gap-8 md:px-8 md:py-10">
+        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 md:flex md:flex-row md:items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-56 md:h-9 md:w-72" />
             <Skeleton className="h-4 w-40" />
@@ -115,15 +115,15 @@ export function CategoryPageSkeleton() {
           </div>
         </div>
 
-        <div className="space-y-2 lg:hidden">
+        <div className="space-y-2 md:hidden">
           <Skeleton className="h-5 w-48" />
           <Skeleton className="h-4 w-36" />
         </div>
 
-        <Skeleton className="h-11 w-full rounded-xl lg:hidden" />
+        <Skeleton className="h-11 w-full rounded-xl md:hidden" />
 
-        <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-12">
-          <aside className="hidden w-[280px] shrink-0 lg:block">
+        <div className="flex w-full flex-col items-start gap-6 md:flex-row md:gap-12">
+          <aside className="hidden w-[280px] shrink-0 md:block">
             <div className="sticky top-24 rounded-2xl border border-border/60 bg-card/80 p-5">
               <CategoryFiltersSkeleton />
             </div>

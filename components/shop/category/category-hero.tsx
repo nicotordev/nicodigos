@@ -75,7 +75,7 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
   return (
     <>
       {/* Compact header — mobile / tablet */}
-      <header className="relative overflow-hidden border-b border-border/80 bg-background lg:hidden">
+      <header className="relative overflow-hidden border-b border-border/80 bg-background md:hidden">
         {bannerSrc ? (
           <div className="relative h-36 w-full overflow-hidden sm:h-44">
             <CategoryBannerBackground
@@ -106,7 +106,7 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
       </header>
 
       {/* Cinematic hero — desktop */}
-      <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden lg:flex">
+      <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden md:flex">
         <div className="absolute inset-0 z-0">
           {bannerSrc ? (
             <CategoryBannerBackground

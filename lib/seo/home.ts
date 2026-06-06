@@ -6,10 +6,10 @@ import { storeRoutes } from "@/lib/store/navigation";
 
 export function buildDefaultHomeSeoMetadata(): SeoMetadataDocument {
   const description =
-    "Compra keys, gift cards y licencias digitales con entrega instantánea, stock verificado y soporte en Chile.";
+    "Tienda de juegos digitales en Chile: keys Steam, gift cards PSN y Xbox, licencias de software y suscripciones con entrega al tiro y soporte local.";
 
   const metadata: Metadata = {
-    title: "Nicodigos — Keys, gift cards y licencias digitales",
+    title: "Nicodigos — Juegos digitales, keys y gift cards Chile",
     description,
     alternates: {
       canonical: "/",

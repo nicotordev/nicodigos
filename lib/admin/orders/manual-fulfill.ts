@@ -67,12 +67,7 @@ export async function deliverManualOrderKeyAction(input: {
     };
   }
 
-  if (item.keys.length >= item.quantity) {
-    return {
-      success: false,
-      error: "Esta línea ya tiene todas sus keys entregadas.",
-    };
-  }
+  const isExtraKey = item.keys.length >= item.quantity;
 
   await prisma.orderKey.create({
     data: {
@@ -106,12 +101,15 @@ export async function deliverManualOrderKeyAction(input: {
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${input.orderId}`);
   revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/keys");
 
   return {
     success: true,
-    message: orderCompleted
-      ? "Key entregada. El pedido quedó completado."
-      : "Key entregada correctamente.",
+    message: isExtraKey
+      ? "Key extra agregada al pedido."
+      : orderCompleted
+        ? "Key entregada. El pedido quedó completado."
+        : "Key entregada correctamente.",
     orderCompleted,
     deliveredKeys,
     pendingKeys,

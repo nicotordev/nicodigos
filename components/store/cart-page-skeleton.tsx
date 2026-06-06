@@ -1,4 +1,4 @@
-import { MarketingLoadingShell } from "@/components/marketing/marketing-loading-shell";
+import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import {
   CartLineItemsSkeleton,
   CheckoutStepsSkeleton,
@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CartPageSkeleton() {
   return (
-    <MarketingLoadingShell contentClassName="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 relative z-10 space-y-8">
+    <MarketingPageShell contentClassName="space-y-6 md:space-y-8">
       <CheckoutStepsSkeleton />
 
       <div className="border-b border-border/10 pb-6">
@@ -23,6 +23,6 @@ export function CartPageSkeleton() {
         <CartLineItemsSkeleton count={3} />
         <CheckoutSummarySkeleton />
       </div>
-    </MarketingLoadingShell>
+    </MarketingPageShell>
   );
 }

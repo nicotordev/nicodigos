@@ -8,6 +8,7 @@ import {
   fulfillKinguinOrder,
   type FulfillKinguinOrderResult,
 } from "@/lib/store/checkout/fulfill-kinguin-order";
+import prisma from "@/lib/prisma";
 
 export async function retryKinguinFulfillmentAction(
   orderId: string,
@@ -16,11 +17,18 @@ export async function retryKinguinFulfillmentAction(
 
   await clearManualFulfillmentPending(orderId);
 
+  // Limpia errores / cola manual para permitir un nuevo intento de compra.
+  await prisma.order.updateMany({
+    where: { id: orderId, kinguinOrderId: null },
+    data: { kinguinStatus: null },
+  });
+
   const result = await fulfillKinguinOrder(orderId);
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/keys");
 
   return result;
 }

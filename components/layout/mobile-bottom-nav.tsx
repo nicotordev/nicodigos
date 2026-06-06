@@ -35,7 +35,8 @@ export function MobileBottomNav({
       label: "Catálogo",
       href: storeRoutes.catalog,
       icon: IconLayoutGrid,
-      active: pathname === storeRoutes.catalog || pathname.startsWith("/catalog/"),
+      active:
+        pathname === storeRoutes.catalog || pathname.startsWith("/catalog/"),
     },
     {
       label: "Ofertas",
@@ -61,7 +62,10 @@ export function MobileBottomNav({
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 h-16 border-t border-border/80 bg-background/95 backdrop-blur-md z-50 flex items-center justify-around px-2 shadow-lg safe-bottom">
+    <nav
+      aria-label="Navegación principal"
+      className="md:hidden fixed bottom-0 inset-x-0 z-50 flex h-16 items-center justify-around border-t border-border/80 bg-background/95 px-2 shadow-lg backdrop-blur-md safe-bottom"
+    >
       {navItems.map((item) => {
         const Icon = item.icon;
         return (
@@ -70,7 +74,7 @@ export function MobileBottomNav({
             href={item.href}
             className={cn(
               "flex flex-col items-center justify-center flex-1 h-full min-h-11 min-w-11 text-muted-foreground/80 hover:text-foreground transition-all relative group",
-              item.active && "text-primary"
+              item.active && "text-primary",
             )}
           >
             <div className="relative p-1 rounded-xl group-active:scale-95 transition-transform duration-100">

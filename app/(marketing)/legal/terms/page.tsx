@@ -15,7 +15,7 @@ export default function TermsPage() {
   return (
     <main className="flex-1 relative overflow-hidden bg-background py-16 sm:py-24">
       {/* Background patterns */}
-      <div className="absolute inset-0 admin-dashboard-grid opacity-15 pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 admin-dashboard-grid opacity-15 hidden md:block" />
       <div className="absolute top-[-10%] left-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 relative z-10 space-y-10">

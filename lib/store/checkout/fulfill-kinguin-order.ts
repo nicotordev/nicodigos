@@ -359,11 +359,13 @@ export async function fulfillKinguinOrder(
     };
   }
 
+  const expectedKeyCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const deliveredKeyCount = await countDeliveredKeys(orderId);
-  if (deliveredKeyCount > 0) {
+
+  if (expectedKeyCount > 0 && deliveredKeyCount >= expectedKeyCount) {
     return {
       status: order.isPreorder ? "processing" : "completed",
-      message: "Tus keys están listas abajo.",
+      message: "Todas las keys ya están entregadas.",
       keysDelivered: deliveredKeyCount,
       kinguinOrderId: order.kinguinOrderId ?? undefined,
     };

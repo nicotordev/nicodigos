@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { CheckoutForm } from "@/components/store/checkout-form";
 import { CheckoutSteps } from "@/components/store/checkout-steps";
 import { getCheckoutPageData } from "@/lib/store/checkout/get-checkout-initial";
 import { getCartView } from "@/lib/store/cart/queries";
 import { getOptionalStoreSession } from "@/lib/store/auth";
 import { storeRoutes } from "@/lib/store/navigation";
-import { formatMoney } from "@/lib/currency/format";
 
 export const metadata: Metadata = {
-  title: "Checkout — Datos de compra",
+  title: "Pago — Datos de compra",
+  description:
+    "Completa tus datos para comprar keys y gift cards en Chile. Facturación conforme a normativa tributaria chilena.",
   robots: {
     index: false,
     follow: false,
@@ -36,31 +38,26 @@ export default async function CheckoutPage() {
   const checkoutData = await getCheckoutPageData(session.user.id);
 
   return (
-    <main className="flex-1 relative overflow-hidden bg-background">
-      <div className="absolute inset-0 admin-dashboard-grid opacity-20 pointer-events-none" />
+    <MarketingPageShell narrow contentClassName="space-y-6 md:space-y-8">
+      <CheckoutSteps current="checkout" />
 
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 relative z-10 space-y-8">
-        <CheckoutSteps current="checkout" />
-
-        <div className="space-y-2 border-b border-border/10 pb-6">
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground">
-            Datos para tu compra
-          </h1>
-          <p className="text-sm text-muted-foreground/90 max-w-xl">
-            Completa los pasos del formulario para emitir tu comprobante y
-            recibir tus keys al tiro después del pago. Los datos se solicitan
-            por obligaciones tributarias y de protección de datos personales en
-            Chile.
-          </p>
-        </div>
-
-        <CheckoutForm
-          {...checkoutData}
-          userId={session.user.id}
-          subtotal={Number(cart.netSubtotal ?? cart.subtotal)}
-          itemCount={cart.itemCount}
-        />
+      <div className="space-y-2 border-b border-border/10 pb-5 md:pb-6">
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
+          Datos para tu compra
+        </h1>
+        <p className="max-w-xl text-sm leading-relaxed text-muted-foreground/90">
+          Completa el formulario para emitir tu comprobante y recibir tus keys
+          al tiro después del pago. Los datos se solicitan por obligaciones
+          tributarias y de protección de datos personales en Chile.
+        </p>
       </div>
-    </main>
+
+      <CheckoutForm
+        {...checkoutData}
+        userId={session.user.id}
+        subtotal={Number(cart.netSubtotal ?? cart.subtotal)}
+        itemCount={cart.itemCount}
+      />
+    </MarketingPageShell>
   );
 }

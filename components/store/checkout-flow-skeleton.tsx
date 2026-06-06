@@ -5,7 +5,10 @@ export function CheckoutStepsSkeleton() {
     <div className="mx-auto max-w-3xl pb-2" aria-hidden>
       <div className="flex items-center justify-between">
         {Array.from({ length: 3 }, (_, index) => (
-          <div key={index} className="flex flex-col items-center gap-2 bg-background px-4">
+          <div
+            key={index}
+            className="flex flex-col items-center gap-2 bg-background px-4"
+          >
             <Skeleton className="size-8 rounded-full" />
             <Skeleton className="h-3 w-14" />
           </div>

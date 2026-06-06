@@ -1,12 +1,12 @@
-import { MarketingLoadingShell } from "@/components/marketing/marketing-loading-shell";
+import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { CartLineItemsSkeleton } from "@/components/store/checkout-flow-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function WishlistPageSkeleton() {
   return (
-    <MarketingLoadingShell
+    <MarketingPageShell
       variant="rose"
-      contentClassName="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 relative z-10 space-y-8"
+      contentClassName="space-y-6 md:space-y-8"
     >
       <div className="border-b border-border/10 pb-6">
         <div className="flex items-center gap-2.5">
@@ -17,6 +17,6 @@ export function WishlistPageSkeleton() {
       </div>
 
       <CartLineItemsSkeleton count={4} />
-    </MarketingLoadingShell>
+    </MarketingPageShell>
   );
 }

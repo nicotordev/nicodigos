@@ -94,7 +94,7 @@ export function CategoryPage({
         className="mx-auto flex w-full max-w-7xl flex-col gap-6 scroll-mt-6 px-4 py-6 sm:px-6 sm:py-8 lg:gap-8 lg:px-8 lg:py-10"
       >
         {/* Section intro — desktop */}
-        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 lg:flex lg:flex-row lg:items-center">
+        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 md:flex md:flex-row md:items-center">
           <div className="space-y-1">
             <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-foreground md:text-3xl">
               {category.name}
@@ -108,14 +108,14 @@ export function CategoryPage({
         </div>
 
         {/* Section intro — mobile */}
-        <div className="space-y-1 lg:hidden">
+        <div className="space-y-1 md:hidden">
           <h2 className="font-heading text-base font-semibold text-foreground">
             Catálogo de {category.name}
           </h2>
           <p className="text-sm text-muted-foreground">{productCountLabel}</p>
         </div>
 
-        <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-12">
+        <div className="flex w-full flex-col items-start gap-6 md:flex-row md:gap-12">
           <MobileFilterSheet>
             <CategoryFilters
               siblingCategories={siblingCategories}

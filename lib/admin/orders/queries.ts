@@ -25,12 +25,32 @@ export async function getAdminOrders(): Promise<AdminOrderListItem[]> {
     include: {
       user: { select: { name: true, email: true } },
       _count: { select: { items: true } },
+      items: {
+        select: {
+          quantity: true,
+          keys: {
+            where: {
+              status: "DELIVERED",
+              serial: { not: "" },
+            },
+            select: { id: true },
+          },
+        },
+      },
     },
   });
 
   return orders.map((order) => {
     const needsManualFulfillment = isManualFulfillmentPending(
       order.kinguinStatus,
+    );
+    const expectedKeyCount = order.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const deliveredKeyCount = order.items.reduce(
+      (sum, item) => sum + item.keys.length,
+      0,
     );
 
     return {
@@ -41,6 +61,7 @@ export async function getAdminOrders(): Promise<AdminOrderListItem[]> {
       createdAt: order.createdAt.toISOString(),
       customerName: order.user.name,
       customerEmail: order.user.email,
+      customerUserId: order.userId,
       itemCount: order._count.items,
       kinguinOrderId: order.kinguinOrderId,
       isPreorder: order.isPreorder,
@@ -48,7 +69,9 @@ export async function getAdminOrders(): Promise<AdminOrderListItem[]> {
       manualFulfillmentNote: needsManualFulfillment
         ? getManualFulfillmentAdminNote(order.kinguinStatus)
         : null,
-      pendingKeyCount: 0,
+      expectedKeyCount,
+      deliveredKeyCount,
+      pendingKeyCount: Math.max(expectedKeyCount - deliveredKeyCount, 0),
     };
   });
 }
@@ -115,6 +138,20 @@ export async function getAdminOrderById(
       email: order.user.email,
       role: order.user.role,
     },
+    billing: {
+      documentType: order.billingDocumentType,
+      fullName: order.billingFullName,
+      email: order.billingEmail,
+      phone: order.billingPhone,
+      rut: order.billingRut,
+      giro: order.billingGiro,
+      companyName: order.billingCompanyName,
+      region: order.billingRegion,
+      commune: order.billingCommune,
+      city: order.billingCity,
+      street: order.billingStreet,
+      unit: order.billingUnit,
+    },
     items: order.items.map((item) => {
       const deliveredKeys = item.keys.filter(
         (key) => key.status === "DELIVERED" && key.serial.trim().length > 0,
@@ -134,6 +171,7 @@ export async function getAdminOrderById(
           kinguinKeyId: key.kinguinKeyId,
           status: key.status,
           contentType: key.contentType,
+          serial: key.serial,
           serialMasked: maskSerial(key.serial),
         })),
       };

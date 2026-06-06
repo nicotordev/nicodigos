@@ -8,8 +8,8 @@ export function HomePageSkeleton() {
       aria-busy="true"
       aria-label="Cargando inicio"
     >
-      <section className="border-b border-border bg-muted/40 px-4 pb-16 pt-10 sm:px-6">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
+      <section className="border-b border-border bg-muted/40 px-4 pb-12 pt-8 sm:px-6 md:pb-16 md:pt-10">
+        <div className="mx-auto grid max-w-7xl gap-8 md:gap-10 lg:grid-cols-2 lg:items-center">
           <div className="space-y-5">
             <Skeleton className="h-7 w-40 rounded-full" />
             <Skeleton className="h-12 w-full max-w-lg" />
@@ -20,7 +20,7 @@ export function HomePageSkeleton() {
               <Skeleton className="h-11 w-32 rounded-xl" />
             </div>
           </div>
-          <Skeleton className="aspect-[4/3] w-full rounded-3xl" />
+          <Skeleton className="aspect-4/3 hidden w-full rounded-3xl md:block" />
         </div>
       </section>
 
