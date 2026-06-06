@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { storeRoutes } from "@/lib/store/navigation";
 import { syncTransactionsForOrder } from "@/lib/transactions/on-order";
+import { sendManualFulfillmentAdminAlert } from "@/lib/email/admin-manual-fulfillment-alert";
 
 export const KINGUIN_MANUAL_PENDING_PREFIX = "kinguin:manual:pending:";
 
@@ -61,12 +62,48 @@ export async function markOrderForManualFulfillment(
   reason: ManualFulfillmentReason,
   detail?: string,
 ): Promise<void> {
+  const existing = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      total: true,
+      currency: true,
+      kinguinStatus: true,
+      user: { select: { name: true, email: true } },
+      items: { select: { name: true, quantity: true } },
+    },
+  });
+
+  if (!existing) {
+    return;
+  }
+
+  const alreadyManual = isManualFulfillmentPending(existing.kinguinStatus);
+
   await prisma.order.update({
     where: { id: orderId },
     data: {
       kinguinStatus: buildManualPendingStatus(reason, detail),
     },
   });
+
+  if (!alreadyManual) {
+    sendManualFulfillmentAdminAlert({
+      orderId: existing.id,
+      reason,
+      detail,
+      customerName: existing.user.name,
+      customerEmail: existing.user.email,
+      total: existing.total.toString(),
+      currency: existing.currency,
+      items: existing.items,
+    }).catch((error) => {
+      console.error(
+        "[manual-fulfillment] No se pudo enviar alerta al admin:",
+        error,
+      );
+    });
+  }
 }
 
 export async function clearManualFulfillmentPending(
