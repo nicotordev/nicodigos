@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const MAX_IMAGES = 24;
 
@@ -195,10 +196,11 @@ export function ProductGalleryEditor({
           )}
         >
           {previewSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={previewSrc}
               alt={productName}
+              width={100}
+              height={100}
               className="mx-auto max-h-80 w-full object-contain p-4"
             />
           ) : (
@@ -225,10 +227,11 @@ export function ProductGalleryEditor({
                   image.isCover && "ring-2 ring-primary ring-offset-2",
                 )}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={image.thumbnailUrl ?? image.url}
-                  alt=""
+                  alt={`${productName} thumbnail image`}
+                  width={100}
+                  height={100}
                   className="aspect-video w-full object-cover"
                 />
                 <div className="absolute inset-x-0 bottom-0 flex flex-wrap gap-1 bg-linear-to-t from-black/80 to-transparent p-2 pt-6">

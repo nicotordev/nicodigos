@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,24 +18,30 @@ interface MobileFilterSheetProps {
 
 export function MobileFilterSheet({ children }: MobileFilterSheetProps) {
   return (
-    <div className="lg:hidden w-full flex items-center justify-between py-2 border-b border-border">
+    <div className="flex w-full items-center justify-between border-b border-border py-2 lg:hidden">
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="w-full flex items-center gap-2 rounded-xl border-border bg-card">
-            <SlidersHorizontal className="h-4 w-4" />
+          <Button
+            variant="outline"
+            className="flex min-h-11 w-full items-center gap-2 rounded-xl border-border bg-card"
+          >
+            <IconAdjustmentsHorizontal className="size-4" aria-hidden />
             <span>Filtrar productos</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] overflow-y-auto bg-background p-6">
-          <SheetHeader className="text-left pb-4">
-            <SheetTitle className="text-lg font-bold tracking-tight">Filtros de Búsqueda</SheetTitle>
+        <SheetContent
+          side="bottom"
+          className="max-h-[85vh] overflow-y-auto rounded-t-2xl bg-background px-4 pb-8 pt-6"
+        >
+          <SheetHeader className="pb-4 text-left">
+            <SheetTitle className="text-lg font-bold tracking-tight">
+              Filtros de búsqueda
+            </SheetTitle>
             <SheetDescription className="text-xs text-muted-foreground">
-              Ajusta los criterios de búsqueda para encontrar tu producto ideal.
+              Ajusta los criterios para encontrar tu producto ideal.
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-4">
-            {children}
-          </div>
+          <div className="mt-2">{children}</div>
         </SheetContent>
       </Sheet>
     </div>

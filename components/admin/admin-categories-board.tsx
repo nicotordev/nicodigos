@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { IconCategory } from "@tabler/icons-react";
+import Image from "next/image";
 
 type AdminCategoriesBoardProps = {
   categories: AdminCategoryListItem[];
@@ -115,10 +116,11 @@ export function AdminCategoriesBoard({
                 <TableCell>
                   <div className="relative size-10 overflow-hidden rounded-lg border border-border bg-muted">
                     {category.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={category.imageUrl}
-                        alt=""
+                        alt={category.name}
+                        width={40}
+                        height={40}
                         className="absolute inset-0 h-full w-full object-cover"
                       />
                     ) : (

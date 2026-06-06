@@ -86,6 +86,7 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 type AdminProductsBoardProps = {
   products: AdminProductListItem[];
@@ -567,10 +568,11 @@ export function AdminProductsBoard({
                       <TableCell className="max-w-xs whitespace-normal pl-2">
                         <div className="flex items-center gap-3 py-1">
                           {product.coverImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <Image
                               src={product.coverImageUrl}
-                              alt=""
+                              alt={`${product.name} cover image`}
+                              width={44}
+                              height={44}
                               className="size-11 shrink-0 rounded-xl border border-border/60 object-cover"
                             />
                           ) : (

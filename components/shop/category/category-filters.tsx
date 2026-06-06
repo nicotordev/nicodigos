@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
+import { storeRoutes } from "@/lib/store/navigation";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { PriceFilter } from "./price-filter";
@@ -42,9 +44,15 @@ interface CategoryFiltersProps {
   }>;
   readonly activeCategorySlug: string;
   readonly filters: CategoryFilterState;
-  readonly onFilterChange: (key: keyof CategoryFilterState, value: string) => void;
+  readonly onFilterChange: (
+    key: keyof CategoryFilterState,
+    value: string,
+  ) => void;
   readonly onPriceChange: (min: string, max: string) => void;
+  readonly showHeader?: boolean;
 }
+
+const filterRowClassName = "flex min-h-11 items-center space-x-2 py-1.5";
 
 export function CategoryFilters({
   siblingCategories,
@@ -52,6 +60,7 @@ export function CategoryFilters({
   filters,
   onFilterChange,
   onPriceChange,
+  showHeader = true,
 }: CategoryFiltersProps) {
   const activeGenres = filters.genre
     ? filters.genre.split(",").map((g) => g.trim())
@@ -67,28 +76,55 @@ export function CategoryFilters({
     onFilterChange("genre", newList.join(","));
   };
 
+  const handleClearFilters = () => {
+    onFilterChange("platform", "");
+    onFilterChange("genre", "");
+    onFilterChange("availability", "");
+    onFilterChange("region", "");
+    onPriceChange("", "");
+  };
+
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between pb-2 border-b border-border">
-        <h3 className="text-lg font-semibold tracking-tight">Filtros</h3>
+      {showHeader ? (
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <h3 className="text-lg font-semibold tracking-tight">Filtros</h3>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="min-h-11 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      ) : (
         <button
-          onClick={() => {
-            onFilterChange("platform", "");
-            onFilterChange("genre", "");
-            onFilterChange("availability", "");
-            onFilterChange("region", "");
-            onPriceChange("", "");
-          }}
-          className="text-xs text-primary font-medium hover:underline hover:text-primary/80 transition-colors"
+          type="button"
+          onClick={handleClearFilters}
+          className="min-h-11 w-full text-left text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
         >
           Limpiar filtros
         </button>
-      </div>
+      )}
 
-      <Accordion type="multiple" defaultValue={["categories", "platform", "genre", "price", "availability", "region"]} className="w-full border-none">
+      <Accordion
+        type="multiple"
+        defaultValue={[
+          "categories",
+          "platform",
+          "genre",
+          "price",
+          "availability",
+          "region",
+        ]}
+        className="w-full border-none"
+      >
         {/* Categories Section */}
         {siblingCategories.length > 0 && (
-          <AccordionItem value="categories" className="border-b border-border/60">
+          <AccordionItem
+            value="categories"
+            className="border-b border-border/60"
+          >
             <AccordionTrigger className="text-sm font-semibold hover:no-underline py-3">
               Categorías
             </AccordionTrigger>
@@ -99,12 +135,13 @@ export function CategoryFilters({
                   return (
                     <Link
                       key={cat.id}
-                      href={`/categories/${cat.slug}`}
-                      className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                      href={storeRoutes.category(cat.slug)}
+                      className={cn(
+                        "flex min-h-11 items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors",
                         isActive
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                          ? "bg-primary/10 font-semibold text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
                     >
                       <span className="truncate">{cat.name}</span>
                       <span className="text-xs text-muted-foreground bg-muted-foreground/10 px-1.5 py-0.5 rounded-md font-mono">
@@ -142,11 +179,13 @@ export function CategoryFilters({
                 const isChecked = activeGenres.includes(genre);
                 const id = `genre-${genre.toLowerCase()}`;
                 return (
-                  <div key={genre} className="flex items-center space-x-2 py-1">
+                  <div key={genre} className={filterRowClassName}>
                     <Checkbox
                       id={id}
                       checked={isChecked}
-                      onCheckedChange={(checked) => handleGenreToggle(genre, !!checked)}
+                      onCheckedChange={(checked) =>
+                        handleGenreToggle(genre, !!checked)
+                      }
                     />
                     <Label
                       htmlFor={id}
@@ -176,7 +215,10 @@ export function CategoryFilters({
         </AccordionItem>
 
         {/* Availability Section */}
-        <AccordionItem value="availability" className="border-b border-border/60">
+        <AccordionItem
+          value="availability"
+          className="border-b border-border/60"
+        >
           <AccordionTrigger className="text-sm font-semibold hover:no-underline py-3">
             Disponibilidad
           </AccordionTrigger>

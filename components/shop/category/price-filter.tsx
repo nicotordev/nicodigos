@@ -32,7 +32,8 @@ export function PriceFilter({
     <div className="space-y-3">
       {PRICE_RANGES.map((range) => {
         const isActive =
-          currentMinPrice === range.minPrice && currentMaxPrice === range.maxPrice;
+          currentMinPrice === range.minPrice &&
+          currentMaxPrice === range.maxPrice;
 
         const handleCheckboxChange = (checked: boolean) => {
           if (checked) {
@@ -45,7 +46,10 @@ export function PriceFilter({
         const id = `price-${range.label.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
 
         return (
-          <div key={range.label} className="flex items-center space-x-2 py-1">
+          <div
+            key={range.label}
+            className="flex min-h-11 items-center space-x-2 py-1.5"
+          >
             <Checkbox
               id={id}
               checked={isActive}

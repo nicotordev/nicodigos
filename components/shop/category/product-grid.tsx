@@ -1,9 +1,12 @@
 "use client";
 
-import { Gamepad2 } from "lucide-react";
+import { IconDeviceGamepad2 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "./product-card";
 import type { CategoryProduct } from "./types";
+
+export const categoryProductGridClassName =
+  "grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4";
 
 interface ProductGridProps {
   readonly products: ReadonlyArray<CategoryProduct>;
@@ -13,22 +16,22 @@ interface ProductGridProps {
 export function ProductGrid({ products, onClearFilters }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-card/40 rounded-3xl border border-border/80 backdrop-blur-[4px] max-w-2xl mx-auto space-y-6">
-        <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-          <Gamepad2 className="h-8 w-8" />
+      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center space-y-5 rounded-2xl border border-border/80 bg-card/40 px-4 py-14 text-center sm:space-y-6 sm:rounded-3xl sm:px-6 sm:py-20 lg:backdrop-blur-[4px]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-16 sm:w-16">
+          <IconDeviceGamepad2 className="size-7 sm:size-8" aria-hidden />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-bold tracking-tight text-foreground">
+          <h3 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
             No encontramos productos para estos filtros
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm">
+          <p className="mx-auto max-w-sm text-sm text-muted-foreground">
             Prueba ajustando la plataforma, precio o disponibilidad.
           </p>
         </div>
         <Button
           onClick={onClearFilters}
           variant="outline"
-          className="rounded-xl border-border hover:bg-muted font-semibold px-6"
+          className="min-h-11 rounded-xl border-border px-6 font-semibold hover:bg-muted"
         >
           Limpiar filtros
         </Button>
@@ -37,7 +40,7 @@ export function ProductGrid({ products, onClearFilters }: ProductGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className={categoryProductGridClassName}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

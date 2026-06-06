@@ -54,6 +54,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 type CreateProductFromKinguinFormProps = {
   kinguinConfigured: boolean;
@@ -670,10 +671,11 @@ export function CreateProductFromKinguinForm({
 
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         {item.coverImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={item.coverImageUrl}
-                            alt=""
+                            alt={`${item.name} cover image`}
+                            width={56}
+                            height={56}
                             className="size-14 shrink-0 rounded-xl object-cover"
                           />
                         ) : (

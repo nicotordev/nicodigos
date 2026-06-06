@@ -10,6 +10,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
@@ -111,10 +112,11 @@ export function CategoryMediaField({
         )}
       >
         {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={preview}
-            alt=""
+            alt={`${preview} image`}
+            width={100}
+            height={100}
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (

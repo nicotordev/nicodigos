@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     domains: [
       "images.unsplash.com",
       "cdns.kinguin.net", // Added to allow images from this hostname
+      "images.pexels.com", // Added to fix next/image error for pexels images
     ],
   },
   async redirects() {

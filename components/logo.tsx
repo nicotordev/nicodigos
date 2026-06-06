@@ -46,7 +46,7 @@ function LogoPicture({
       className={cn("inline-flex shrink-0", sizeClasses[size], className)}
     >
       <source srcSet={logoSrc.webp} type="image/webp" />
-      <img
+      <Image
         src={logoSrc.png}
         alt="Nicodigos"
         width={LOGO_WIDTH}

@@ -46,7 +46,10 @@ export function AvailabilityFilter({
         const id = `availability-${opt.value}`;
 
         return (
-          <div key={opt.value} className="flex items-center space-x-2 py-1">
+          <div
+            key={opt.value}
+            className="flex min-h-11 items-center space-x-2 py-1.5"
+          >
             <Checkbox
               id={id}
               checked={isChecked}

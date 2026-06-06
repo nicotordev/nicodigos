@@ -1,28 +1,33 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { IconCategory, IconChevronRight } from "@tabler/icons-react";
+import { IconCategory, IconArrowRight } from "@tabler/icons-react";
 
 import {
   Empty,
-  EmptyDescription,
-  EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
 } from "@/components/ui/empty";
+import CategoryCard, {
+  categoryCardGridClassName,
+} from "@/components/shop/category/category-card";
+import { CategoryTrustBadges } from "@/components/shop/category/category-trust-badges";
 import { getStorefrontCategories } from "@/lib/store/categories/queries";
 import { storeRoutes } from "@/lib/store/navigation";
 
 export const metadata: Metadata = {
-  title: "Categorías",
+  title: "Categorías | Nicodigos",
   description:
-    "Explora keys, gift cards y licencias por tipo de producto digital.",
+    "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
   alternates: {
     canonical: "/categories",
   },
   openGraph: {
     title: "Categorías de Productos Digitales | Nicodigos",
     description:
-      "Explora keys, gift cards y licencias por tipo de producto digital.",
+      "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
     type: "website",
     url: "/categories",
   },
@@ -30,135 +35,138 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Categorías de Productos Digitales | Nicodigos",
     description:
-      "Explora keys, gift cards y licencias por tipo de producto digital.",
+      "Explora keys de Steam, gift cards, licencias de software y suscripciones por tipo de producto digital.",
   },
 };
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function CategoriesPage() {
   const categories = await getStorefrontCategories();
+  const categoryCountLabel =
+    categories.length === 1 ? "Categoría" : "Categorías";
 
   return (
-    <main className="flex-1 relative overflow-hidden bg-background">
-      {/* Decorative background elements and deep indigo orbs */}
-      <div className="absolute inset-0 admin-dashboard-grid opacity-20 pointer-events-none" />
-      <div className="absolute top-[-10%] left-[-10%] -z-10 h-[550px] w-[550px] rounded-full bg-violet-500/10 blur-[130px] pointer-events-none" />
-      <div className="absolute top-[30%] right-[-10%] -z-10 h-[450px] w-[450px] rounded-full bg-indigo-500/10 blur-[110px] pointer-events-none" />
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Compact header — mobile / tablet */}
+      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 lg:hidden">
+        <div className="mx-auto w-full max-w-7xl space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-primary">
+            {categories.length} {categoryCountLabel}
+          </p>
+          <h1 className="font-heading text-xl font-semibold text-foreground sm:text-2xl">
+            Categorías
+          </h1>
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground line-clamp-2">
+            Explora códigos digitales, licencias de software, gift cards y
+            suscripciones con entrega inmediata.
+          </p>
+          <CategoryTrustBadges
+            includeOffers={false}
+            className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none sm:mx-0 sm:px-0"
+          />
+        </div>
+      </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 relative z-10 space-y-8">
-        
-        {/* Creative Hero Banner Header with Indigo/Violet Theme */}
-        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-r from-card via-indigo-500/5 to-card p-6 sm:p-10 shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-indigo-500/5" />
-          <div className="absolute -right-16 -top-16 size-48 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-500 border border-indigo-500/20">
-                <IconCategory className="size-3.5" />
-                Explora por Categorías
-              </div>
-              <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl bg-gradient-to-r from-foreground to-indigo-500 bg-clip-text">
-                Categorías de Productos
-              </h1>
-              <p className="text-sm text-muted-foreground/90 max-w-xl leading-relaxed">
-                Navega y filtra fácilmente por tipo de producto digital: keys de PC, tarjetas de regalo de consola, suscripciones y licencias oficiales.
-              </p>
-            </div>
-            {categories.length > 0 && (
-              <div className="flex flex-col items-start md:items-end justify-center shrink-0 bg-background/60 backdrop-blur-md border border-border/40 rounded-2xl p-4 shadow-sm min-w-[160px]">
-                <span className="text-2xl font-black text-indigo-500 tabular-nums">{categories.length}</span>
-                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Categorías</span>
-              </div>
-            )}
+      {/* Cinematic hero — desktop */}
+      <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden bg-black lg:flex">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/shop/category-hero.webp"
+            alt="Todas las Categorías"
+            fill
+            priority
+            sizes="100vw"
+            className="scale-105 object-cover object-center opacity-65 transition-transform duration-10000 ease-out"
+          />
+          <div className="absolute inset-0 z-10 bg-black/55" />
+        </div>
+
+        <div className="relative z-20 mt-8 flex max-w-3xl flex-col items-center gap-4 px-6 text-center">
+          <span className="rounded-full border border-primary/30 bg-primary/25 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary-foreground/90 backdrop-blur-md md:text-sm">
+            {categories.length} {categoryCountLabel}
+          </span>
+          <h1 className="font-heading text-4xl font-black uppercase tracking-wider text-white drop-shadow-md md:text-5xl lg:text-6xl">
+            Categorías
+          </h1>
+          <p className="max-w-xl text-sm font-light text-gray-200 drop-shadow line-clamp-3 md:text-base">
+            Explora códigos digitales, licencias de software, gift cards y
+            suscripciones con entrega inmediata.
+          </p>
+        </div>
+
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-30 w-full overflow-hidden leading-0">
+          <svg
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            className="relative block h-[60px] w-full fill-background"
+          >
+            <path
+              d="M0,0 C150,90 350,120 600,120 C850,120 1050,90 1200,0 L1200,120 L0,120 Z"
+              className="fill-background"
+            />
+          </svg>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:gap-8 lg:px-8 lg:py-10">
+        {/* Section intro — desktop */}
+        <div className="hidden flex-col justify-between gap-4 border-b border-border/80 pb-6 lg:flex lg:flex-row lg:items-center">
+          <div className="space-y-1">
+            <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-foreground md:text-3xl">
+              Explorar por Categoría
+            </h2>
+            <p className="text-sm font-semibold text-muted-foreground">
+              Elige un tipo de producto digital para filtrar el catálogo
+            </p>
           </div>
+
+          <CategoryTrustBadges
+            includeOffers={false}
+            className="flex flex-wrap gap-2"
+          />
+        </div>
+
+        {/* Section intro — mobile */}
+        <div className="space-y-1 lg:hidden">
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Explorar por categoría
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Elige un tipo de producto digital para filtrar el catálogo
+          </p>
         </div>
 
         {categories.length === 0 ? (
-          <Empty className="py-16 border-dashed bg-muted/5">
-            <EmptyHeader>
-              <EmptyTitle className="text-base font-bold">
-                Sin categorías
-              </EmptyTitle>
-              <EmptyDescription className="text-sm">
-                Aún no hay categorías publicadas. Mientras tanto, puedes ver
-                todo el catálogo.
-              </EmptyDescription>
-            </EmptyHeader>
-            <Link
-              href={storeRoutes.catalog}
-              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              Ir al catálogo
-            </Link>
+          <Empty>
+            <EmptyMedia>
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <IconCategory className="size-6" />
+              </div>
+            </EmptyMedia>
+            <EmptyTitle>Sin categorías disponibles</EmptyTitle>
+            <EmptyDescription>
+              Aún no hay categorías de productos publicadas. Mientras tanto,
+              puedes revisar el catálogo completo de productos.
+            </EmptyDescription>
+            <EmptyContent>
+              <Link
+                href={storeRoutes.catalog}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/95 hover:shadow-primary/20"
+              >
+                <span>Ir al catálogo</span>
+                <IconArrowRight className="size-4" />
+              </Link>
+            </EmptyContent>
           </Empty>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          <div className={categoryCardGridClassName}>
             {categories.map((category) => (
-              <li key={category.id}>
-                <Link
-                  href={storeRoutes.category(category.slug)}
-                  className="group block h-full"
-                >
-                  <article className="group relative overflow-hidden rounded-3xl border border-border/80 bg-muted/10 transition-all duration-300 hover:border-primary/45 hover:shadow-lg">
-                    <div className="relative aspect-[4/3] sm:aspect-[16/8] w-full overflow-hidden">
-                      {category.bannerUrl || category.imageUrl ? (
-                        <Image
-                          src={category.bannerUrl ?? category.imageUrl!}
-                          alt={category.name}
-                          fill
-                          unoptimized
-                          sizes="(max-width:640px) 50vw, 400px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-indigo-500/10">
-                          <IconCategory className="size-12 text-primary/30" />
-                        </div>
-                      )}
-                      
-                      {/* Gradient overlay inside image for better text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent transition-opacity duration-300 group-hover:from-black/95" />
-                      
-                      {/* Overlay content */}
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6">
-                        <div className="space-y-1.5 transform translate-y-3 sm:translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                          <h2 className="font-heading text-sm sm:text-xl font-black text-white tracking-tight uppercase group-hover:text-primary transition-colors truncate">
-                            {category.name}
-                          </h2>
-                          
-                          {/* Description hidden on mobile, fades in on desktop hover */}
-                          {category.description ? (
-                            <p className="hidden sm:block text-xs text-gray-300 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75 leading-relaxed">
-                              {category.description}
-                            </p>
-                          ) : (
-                            <p className="hidden sm:block text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                              Explora todo el catálogo de {category.name.toLowerCase()} al mejor precio.
-                            </p>
-                          )}
-                          
-                          <div className="flex items-center justify-between gap-2 pt-1">
-                            <p className="text-[10px] sm:text-xs font-bold text-gray-300">
-                              {category.productCount === 1
-                                ? "1 producto"
-                                : `${category.productCount} productos`}
-                            </p>
-                            <span className="text-[10px] sm:text-xs font-extrabold text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                              Explorar →
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                </Link>
-              </li>
+              <CategoryCard key={category.id} category={category} />
             ))}
-          </ul>
+          </div>
         )}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

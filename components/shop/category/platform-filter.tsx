@@ -45,7 +45,10 @@ export function PlatformFilter({
         const id = `platform-${platform.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
 
         return (
-          <div key={platform} className="flex items-center space-x-2 py-1">
+          <div
+            key={platform}
+            className="flex min-h-11 items-center space-x-2 py-1.5"
+          >
             <Checkbox
               id={id}
               checked={isChecked}
