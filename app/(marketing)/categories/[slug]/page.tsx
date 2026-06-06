@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { CategoryPage } from "@/components/shop/category/category-page";
-import type { CategoryProduct, SortValue } from "@/components/shop/category/types";
+import type {
+  CategoryProduct,
+  SortValue,
+} from "@/components/shop/category/types";
 import { getConsumerPrice } from "@/lib/store/products/pricing";
 
 export const revalidate = 60; // Revalidate cache every 60 seconds
@@ -52,7 +56,11 @@ export async function generateMetadata({
 
   const title = `${category.name} | Códigos digitales en Chile`;
   const plainDescription = category.description
-    ? category.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160)
+    ? category.description
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 160)
     : "";
 
   const description =
@@ -60,7 +68,8 @@ export async function generateMetadata({
     `Compra ${category.name}, juegos digitales, gift cards, software keys y suscripciones con entrega rápida en Chile.`;
 
   // Safely cast or parse existing JSON SEO metadata
-  const documentMetadata = (category.seoMetadata?.document as Record<string, unknown>) ?? {};
+  const documentMetadata =
+    (category.seoMetadata?.document as Record<string, unknown>) ?? {};
 
   return {
     title,
@@ -99,10 +108,7 @@ export default async function Page({
 
   // 2. Fetch sibling categories for sidebar filter
   const siblingCategoriesRaw = await prisma.category.findMany({
-    orderBy: [
-      { sortOrder: "asc" },
-      { name: "asc" }
-    ],
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: {
       _count: {
         select: {
@@ -122,7 +128,7 @@ export default async function Page({
   }));
 
   // 3. Build Prisma query dynamic filters
-  const andConditions: any[] = [
+  const andConditions: Prisma.ProductWhereInput[] = [
     { isActive: true },
     {
       categories: {
@@ -167,13 +173,15 @@ export default async function Page({
 
   // Price Filter (converts CLP final pricing back to DB raw pricing)
   if (resolvedSearchParams.minPrice || resolvedSearchParams.maxPrice) {
-    const priceCondition: Record<string, any> = {};
+    const priceCondition: Prisma.DecimalFilter<"Product"> = {};
     if (resolvedSearchParams.minPrice) {
-      const rawMin = Number(resolvedSearchParams.minPrice) / CONSUMER_TO_DB_FACTOR;
+      const rawMin =
+        Number(resolvedSearchParams.minPrice) / CONSUMER_TO_DB_FACTOR;
       priceCondition.gte = rawMin;
     }
     if (resolvedSearchParams.maxPrice) {
-      const rawMax = Number(resolvedSearchParams.maxPrice) / CONSUMER_TO_DB_FACTOR;
+      const rawMax =
+        Number(resolvedSearchParams.maxPrice) / CONSUMER_TO_DB_FACTOR;
       priceCondition.lte = rawMax;
     }
     andConditions.push({
@@ -189,7 +197,7 @@ export default async function Page({
       .filter(Boolean);
 
     if (avails.length > 0) {
-      const orConditions: any[] = [];
+      const orConditions: Prisma.ProductWhereInput[] = [];
       if (avails.includes("in-stock")) {
         orConditions.push({ qty: { gt: 0 } });
       }
@@ -220,12 +228,16 @@ export default async function Page({
       .filter(Boolean);
 
     if (regions.length > 0) {
-      const orConditions: any[] = [];
+      const orConditions: Prisma.ProductWhereInput[] = [];
       regions.forEach((r) => {
         if (r === "global") {
-          orConditions.push({ regionName: { equals: "Global", mode: "insensitive" } });
+          orConditions.push({
+            regionName: { equals: "Global", mode: "insensitive" },
+          });
         } else if (r === "latam") {
-          orConditions.push({ regionName: { equals: "LATAM", mode: "insensitive" } });
+          orConditions.push({
+            regionName: { equals: "LATAM", mode: "insensitive" },
+          });
         } else if (r === "chile") {
           orConditions.push({
             OR: [
@@ -234,7 +246,9 @@ export default async function Page({
             ],
           });
         } else if (r === "europe") {
-          orConditions.push({ regionName: { equals: "Europe", mode: "insensitive" } });
+          orConditions.push({
+            regionName: { equals: "Europe", mode: "insensitive" },
+          });
         } else if (r === "united-states") {
           orConditions.push({
             OR: [
@@ -265,7 +279,7 @@ export default async function Page({
 
   // Build the sorting orderBy clause
   const sort = (resolvedSearchParams.sort as SortValue) || "featured";
-  let orderBy: Record<string, any> = { isFeatured: "desc" };
+  let orderBy: Prisma.ProductOrderByWithRelationInput = { isFeatured: "desc" };
 
   if (sort === "newest") {
     orderBy = { createdAt: "desc" };
@@ -330,6 +344,7 @@ export default async function Page({
     name: category.name,
     slug: category.slug,
     description: category.description,
+    imageUrl: category.imageUrl,
     bannerUrl: category.bannerUrl,
   };
 

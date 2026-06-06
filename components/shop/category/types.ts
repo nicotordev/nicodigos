@@ -37,5 +37,6 @@ export type CategoryViewModel = {
   name: string;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
   bannerUrl: string | null;
 };

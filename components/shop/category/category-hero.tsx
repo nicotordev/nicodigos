@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { CategoryTrustBadges } from "./category-trust-badges";
 import type { CategoryViewModel } from "./types";
 
@@ -17,8 +19,48 @@ function plainDescription(html: string) {
     .trim();
 }
 
+function categoryHeroImageSrc(category: CategoryViewModel) {
+  return category.bannerUrl ?? category.imageUrl;
+}
+
+function CategoryBannerBackground({
+  src,
+  alt,
+  className,
+  sizes,
+  priority = false,
+  onError,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  sizes: string;
+  priority?: boolean;
+  onError: () => void;
+}) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      unoptimized
+      priority={priority}
+      sizes={sizes}
+      className={cn("object-cover object-center", className)}
+      onError={onError}
+    />
+  );
+}
+
+function CategoryBannerFallback() {
+  return (
+    <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-primary/25 via-muted to-indigo-500/20" />
+  );
+}
+
 export function CategoryHero({ category, productCount }: CategoryHeroProps) {
-  const bannerSrc = category.bannerUrl;
+  const [imageFailed, setImageFailed] = useState(false);
+  const bannerSrc = imageFailed ? null : categoryHeroImageSrc(category);
   const productCountLabel = `${productCount} ${
     productCount === 1 ? "Producto" : "Productos"
   }`;
@@ -33,8 +75,21 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
   return (
     <>
       {/* Compact header — mobile / tablet */}
-      <header className="border-b border-border/80 bg-background px-4 pb-5 pt-6 sm:px-6 lg:hidden">
-        <div className="mx-auto w-full max-w-7xl space-y-3">
+      <header className="relative overflow-hidden border-b border-border/80 bg-background lg:hidden">
+        {bannerSrc ? (
+          <div className="relative h-36 w-full overflow-hidden sm:h-44">
+            <CategoryBannerBackground
+              src={bannerSrc}
+              alt=""
+              sizes="100vw"
+              className="scale-105 opacity-90"
+              onError={() => setImageFailed(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-black/25" />
+          </div>
+        ) : null}
+
+        <div className="relative mx-auto w-full max-w-7xl space-y-3 px-4 pb-5 pt-6 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-primary">
             {productCountLabel}
           </p>
@@ -54,20 +109,19 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
       <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden lg:flex">
         <div className="absolute inset-0 z-0">
           {bannerSrc ? (
-            <Image
+            <CategoryBannerBackground
               src={bannerSrc}
               alt={category.name}
-              fill
-              unoptimized
-              priority
               sizes="100vw"
-              className="scale-105 object-cover object-center transition-transform duration-10000 ease-out"
+              priority
+              className="scale-105 transition-transform duration-10000 ease-out"
+              onError={() => setImageFailed(true)}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/25 via-muted to-indigo-500/20" />
+            <CategoryBannerFallback />
           )}
           <div className="absolute inset-0 z-10 bg-black/45" />
-          <div className="absolute inset-0 z-15 bg-gradient-to-t from-background/90 via-transparent to-black/30" />
+          <div className="absolute inset-0 z-[15] bg-gradient-to-t from-background/90 via-transparent to-black/30" />
         </div>
 
         <div className="relative z-20 mt-16 flex max-w-3xl flex-col items-center gap-4 px-6 text-center">
