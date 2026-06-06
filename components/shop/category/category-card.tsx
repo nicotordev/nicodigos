@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconCategory, IconChevronRight } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -26,11 +26,7 @@ export interface CategoryCardProps {
 }
 
 function categoryImageSrc(category: StorefrontCategory) {
-  return (
-    category.bannerUrl ??
-    category.imageUrl ??
-    "/images/shop/product-placeholder.webp"
-  );
+  return category.bannerUrl ?? category.imageUrl ?? null;
 }
 
 function categoryDescription(category: StorefrontCategory) {
@@ -61,14 +57,20 @@ function CategoryCardTile({ category, className }: CategoryCardProps) {
       )}
     >
       <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-16">
-        <Image
-          src={imageSrc}
-          alt={category.name}
-          fill
-          unoptimized
-          sizes="72px"
-          className="object-cover object-center"
-        />
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
+            alt={category.name}
+            fill
+            unoptimized
+            sizes="72px"
+            className="object-cover object-center"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-indigo-500/10">
+            <IconCategory className="size-6 text-primary/35" aria-hidden />
+          </div>
+        )}
       </div>
 
       <div className="min-w-0 flex-1 space-y-0.5">
@@ -102,14 +104,20 @@ function CategoryCardGrid({ category, className }: CategoryCardProps) {
     >
       <Card className="glass-card glass-card-hover h-full overflow-hidden rounded-2xl border-border bg-card pt-0! flex flex-col">
         <CardHeader className="relative aspect-4/3 overflow-hidden bg-muted p-0! xl:aspect-[5/4]">
-          <Image
-            src={imageSrc}
-            alt={category.name}
-            fill
-            unoptimized
-            sizes={categoryCardImageSizes}
-            className="object-cover object-center opacity-85 transition-transform duration-300 ease-out motion-safe:group-hover:scale-105 motion-safe:group-hover:opacity-100"
-          />
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt={category.name}
+              fill
+              unoptimized
+              sizes={categoryCardImageSizes}
+              className="object-cover object-center opacity-85 transition-transform duration-300 ease-out motion-safe:group-hover:scale-105 motion-safe:group-hover:opacity-100"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-indigo-500/10">
+              <IconCategory className="size-12 text-primary/30" aria-hidden />
+            </div>
+          )}
 
           <div className="absolute inset-0 bg-black/30 opacity-0 transition-opacity duration-300 motion-safe:group-hover:opacity-100" />
 

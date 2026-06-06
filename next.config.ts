@@ -16,10 +16,11 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    domains: [
-      "images.unsplash.com",
-      "cdns.kinguin.net", // Added to allow images from this hostname
-      "images.pexels.com", // Added to fix next/image error for pexels images
+    remotePatterns: [
+      { protocol: "https", hostname: "**.kinguin.net" },
+      { protocol: "https", hostname: "r2.nicodigos.cl" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "images.pexels.com" },
     ],
   },
   async redirects() {

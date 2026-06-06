@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { IconCategory, IconArrowRight } from "@tabler/icons-react";
 
@@ -71,14 +70,7 @@ export default async function CategoriesPage() {
       {/* Cinematic hero — desktop */}
       <header className="relative hidden h-[50vh] max-h-[600px] min-h-[400px] w-full items-center justify-center overflow-hidden bg-black lg:flex">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/shop/category-hero.webp"
-            alt="Todas las Categorías"
-            fill
-            priority
-            sizes="100vw"
-            className="scale-105 object-cover object-center opacity-65 transition-transform duration-10000 ease-out"
-          />
+          <div className="h-full w-full bg-gradient-to-br from-primary/30 via-black to-indigo-950/80" />
           <div className="absolute inset-0 z-10 bg-black/55" />
         </div>
 

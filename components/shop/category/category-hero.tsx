@@ -18,7 +18,7 @@ function plainDescription(html: string) {
 }
 
 export function CategoryHero({ category, productCount }: CategoryHeroProps) {
-  const bannerSrc = category.bannerUrl || "/images/shop/category-hero.webp";
+  const bannerSrc = category.bannerUrl;
   const productCountLabel = `${productCount} ${
     productCount === 1 ? "Producto" : "Productos"
   }`;
@@ -53,14 +53,19 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
       {/* Cinematic hero — desktop */}
       <header className="relative hidden h-[60vh] max-h-[700px] min-h-[480px] w-full items-center justify-center overflow-hidden lg:flex">
         <div className="absolute inset-0 z-0">
-          <Image
-            src={bannerSrc}
-            alt={category.name}
-            fill
-            priority
-            sizes="100vw"
-            className="scale-105 object-cover object-center transition-transform duration-10000 ease-out"
-          />
+          {bannerSrc ? (
+            <Image
+              src={bannerSrc}
+              alt={category.name}
+              fill
+              unoptimized
+              priority
+              sizes="100vw"
+              className="scale-105 object-cover object-center transition-transform duration-10000 ease-out"
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-primary/25 via-muted to-indigo-500/20" />
+          )}
           <div className="absolute inset-0 z-10 bg-black/45" />
           <div className="absolute inset-0 z-15 bg-gradient-to-t from-background/90 via-transparent to-black/30" />
         </div>

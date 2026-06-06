@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Globe, ShieldCheck } from "lucide-react";
+import {
+  Heart,
+  ImageIcon,
+  ShoppingBag,
+  Globe,
+  ShieldCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -29,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
     product.coverImageUrl ||
     product.images.find((img) => img.isCover)?.url ||
     product.images[0]?.url ||
-    "/images/shop/product-placeholder.webp";
+    null;
 
   const isOutOfStock = product.qty <= 0;
 
@@ -65,13 +71,20 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
       >
         <div className="relative flex aspect-3/4 w-full items-center justify-center overflow-hidden bg-muted lg:aspect-4/3">
-          <Image
-            src={imageSrc}
-            alt={product.name}
-            fill
-            sizes={categoryProductImageSizes}
-            className="object-cover object-center transition-transform duration-300 ease-out motion-safe:lg:group-hover:scale-105"
-          />
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              unoptimized
+              sizes={categoryProductImageSizes}
+              className="object-cover object-center transition-transform duration-300 ease-out motion-safe:lg:group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-indigo-500/10">
+              <ImageIcon className="size-10 text-primary/30" aria-hidden />
+            </div>
+          )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 motion-safe:lg:group-hover:opacity-100" />
 
