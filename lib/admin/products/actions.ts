@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { storeRoutes } from "@/lib/store/navigation";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getEurToClpRate } from "@/lib/currency/exchange";
+import { normalizeCountryLimitations } from "@/lib/admin/products/country-limitations";
 import { mapKinguinProductMetadata } from "@/lib/admin/products/kinguin-metadata";
 import { mapKinguinProductToCreateInput } from "@/lib/admin/products/map-kinguin";
 import { replaceProductImages } from "@/lib/admin/products/persist-images";
@@ -65,6 +66,7 @@ function mapSearchResult(
     alreadyImported:
       imported.kinguinIds.has(product.kinguinId) ||
       imported.productIds.has(product.productId),
+    countryLimitations: normalizeCountryLimitations(product.countryLimitation),
   };
 }
 

@@ -9,6 +9,7 @@ import {
   IconChevronRight,
   IconPackage,
   IconSearch,
+  IconX,
 } from "@tabler/icons-react";
 import {
   bulkImportKinguinProductsAction,
@@ -18,6 +19,7 @@ import {
 import { slugify } from "@/lib/admin/products/slugify";
 import type { BulkKinguinImportError } from "@/lib/admin/products/types";
 import type { KinguinSearchResultItem } from "@/lib/admin/products/types";
+import { isCountryExcluded } from "@/lib/admin/products/country-limitations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatSourceMoney } from "@/lib/admin/format";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -47,6 +49,11 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -65,6 +72,45 @@ const BULK_IMPORT_CONCURRENCY = 3;
 const BULK_IMPORT_AI_CONCURRENCY = 2;
 const BULK_IMPORT_BATCH_SIZE = 100;
 const BULK_IMPORT_BATCH_CONCURRENCY = 2;
+
+function ChileExclusionIndicator({
+  countryLimitations,
+}: {
+  countryLimitations: string[];
+}) {
+  if (!isCountryExcluded(countryLimitations, "CL")) {
+    return null;
+  }
+
+  const excludedList = countryLimitations.join(", ");
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className="inline-flex size-8 shrink-0 cursor-help items-center justify-center rounded-full bg-destructive/10 text-destructive"
+          aria-label="Chile excluido"
+        >
+          <IconX className="size-4" stroke={2.5} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side="left"
+        className="max-w-xs flex-col items-start gap-0 py-2"
+      >
+        <p className="font-medium">Chile (CL) excluido</p>
+        <p className="mt-1 text-background/80">
+          Este producto no está disponible para clientes en Chile según Kinguin.
+        </p>
+        {excludedList ? (
+          <p className="mt-1 text-background/80">
+            Países excluidos: {excludedList}
+          </p>
+        ) : null}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export function CreateProductFromKinguinForm({
   kinguinConfigured,
@@ -704,26 +750,31 @@ export function CreateProductFromKinguinForm({
                           </div>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        className="shrink-0 sm:w-auto"
-                        disabled={
-                          item.alreadyImported ||
-                          isSearching ||
-                          isRowImporting ||
-                          isBulkImporting
-                        }
-                        onClick={() => openImportDialog(item)}
-                      >
-                        {isRowImporting ? (
-                          <>
-                            <Spinner className="size-4" />
-                            Importando…
-                          </>
-                        ) : (
-                          "Importar"
-                        )}
-                      </Button>
+                      <div className="flex shrink-0 items-center gap-2 sm:w-auto">
+                        <ChileExclusionIndicator
+                          countryLimitations={item.countryLimitations}
+                        />
+                        <Button
+                          type="button"
+                          className="shrink-0 sm:w-auto"
+                          disabled={
+                            item.alreadyImported ||
+                            isSearching ||
+                            isRowImporting ||
+                            isBulkImporting
+                          }
+                          onClick={() => openImportDialog(item)}
+                        >
+                          {isRowImporting ? (
+                            <>
+                              <Spinner className="size-4" />
+                              Importando…
+                            </>
+                          ) : (
+                            "Importar"
+                          )}
+                        </Button>
+                      </div>
                     </li>
                   );
                 })}

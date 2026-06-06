@@ -28,6 +28,7 @@ export type KinguinSearchResultItem = {
   coverImageUrl: string | null;
   isPreorder: boolean;
   alreadyImported: boolean;
+  countryLimitations: string[];
 };
 
 export type KinguinSearchMode = "api" | "catalog";
