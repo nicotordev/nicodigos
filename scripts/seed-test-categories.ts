@@ -141,7 +141,7 @@ async function seedTestCategories(): Promise<void> {
       },
       select: { id: true, name: true, slug: true },
     });
-    categories.push({ ...category, matchPlatform: def.matchPlatform });
+    categories.push({ ...category, matchPlatform: (def as any).matchPlatform as RegExp | undefined });
     console.log(
       `[seed-test-categories] Categoría: ${category.name} (${category.slug}) · imagen OK`,
     );

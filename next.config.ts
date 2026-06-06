@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "8mb",
     },
   },
+  images: {
+    domains: [
+      "images.unsplash.com",
+      "cdns.kinguin.net", // Added to allow images from this hostname
+    ],
+  },
   async redirects() {
     return [
       {
