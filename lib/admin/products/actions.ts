@@ -76,6 +76,21 @@ function revalidateProductImportPaths(product?: { id: string }) {
   revalidatePath("/admin");
 }
 
+function revalidateProductCatalogPaths(product: {
+  slug: string;
+  categories: { slug: string }[];
+}) {
+  revalidatePath("/admin/products");
+  revalidatePath("/admin");
+  revalidatePath(storeRoutes.catalog);
+  revalidatePath(storeRoutes.offers);
+  revalidatePath("/");
+  revalidatePath(storeRoutes.product(product.slug));
+  for (const category of product.categories) {
+    revalidatePath(storeRoutes.category(category.slug));
+  }
+}
+
 async function importKinguinProduct(
   kinguinProductId: string,
   options?: { translateWithAi?: boolean; slug?: string },
@@ -647,6 +662,96 @@ export async function bulkAssignProductsCategoryAction(
     return {
       success: false,
       error: "No se pudo asignar la categoría a los productos seleccionados.",
+    };
+  }
+}
+
+export async function deleteProductAction(
+  productId: string,
+): Promise<AdminProductActionResult<{ id: string }>> {
+  await requireAdmin();
+
+  const id = productId.trim();
+  if (!id) {
+    return { success: false, error: "Producto no válido." };
+  }
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        categories: { select: { slug: true } },
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "Producto no encontrado." };
+    }
+
+    await prisma.product.delete({ where: { id } });
+
+    revalidateProductCatalogPaths(product);
+
+    return {
+      success: true,
+      data: { id },
+      message: `«${product.name}» eliminado del catálogo.`,
+    };
+  } catch {
+    return { success: false, error: "No se pudo eliminar el producto." };
+  }
+}
+
+export async function bulkDeleteProductsAction(
+  productIds: string[],
+): Promise<AdminProductActionResult<{ deletedCount: number }>> {
+  await requireAdmin();
+
+  const uniqueIds = [
+    ...new Set(productIds.map((id) => id.trim()).filter(Boolean)),
+  ];
+  if (uniqueIds.length === 0) {
+    return { success: false, error: "No hay productos seleccionados." };
+  }
+
+  try {
+    const products = await prisma.product.findMany({
+      where: { id: { in: uniqueIds } },
+      select: {
+        id: true,
+        slug: true,
+        categories: { select: { slug: true } },
+      },
+    });
+
+    if (products.length === 0) {
+      return {
+        success: false,
+        error: "No se encontraron los productos seleccionados.",
+      };
+    }
+
+    await prisma.product.deleteMany({
+      where: { id: { in: products.map((product) => product.id) } },
+    });
+
+    for (const product of products) {
+      revalidateProductCatalogPaths(product);
+    }
+
+    const deletedCount = products.length;
+    return {
+      success: true,
+      data: { deletedCount },
+      message: `${deletedCount} producto${deletedCount === 1 ? "" : "s"} eliminado${deletedCount === 1 ? "" : "s"}.`,
+    };
+  } catch {
+    return {
+      success: false,
+      error: "No se pudieron eliminar los productos seleccionados.",
     };
   }
 }

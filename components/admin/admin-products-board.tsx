@@ -18,6 +18,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconCategory,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
   buildAdminProductsSearchParams,
@@ -73,7 +74,9 @@ import {
 } from "@/components/ui/select";
 import {
   bulkAssignProductsCategoryAction,
+  bulkDeleteProductsAction,
   bulkUpdateProductsAction,
+  deleteProductAction,
 } from "@/lib/admin/products/actions";
 import {
   Dialog,
@@ -255,6 +258,51 @@ export function AdminProductsBoard({
           id: toastId,
         });
         setSelectedIds([]);
+        router.refresh();
+      } else {
+        toast.error(res.error, { id: toastId });
+      }
+    });
+  }
+
+  function handleDeleteProduct(productId: string, name: string) {
+    if (
+      !window.confirm(
+        `¿Eliminar «${name}» del catálogo? Se quitará de carritos y listas de deseos. Los pedidos existentes conservan su historial.`,
+      )
+    ) {
+      return;
+    }
+
+    startTransition(async () => {
+      const toastId = toast.loading("Eliminando producto...");
+      const res = await deleteProductAction(productId);
+      if (res.success) {
+        toast.success(res.message ?? "Producto eliminado", { id: toastId });
+        setSelectedIds((current) => current.filter((id) => id !== productId));
+        router.refresh();
+      } else {
+        toast.error(res.error, { id: toastId });
+      }
+    });
+  }
+
+  function handleBulkDelete() {
+    if (
+      !window.confirm(
+        `¿Eliminar ${selectedIds.length} producto${selectedIds.length === 1 ? "" : "s"} del catálogo? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+
+    startTransition(async () => {
+      const toastId = toast.loading("Eliminando productos...");
+      const res = await bulkDeleteProductsAction(selectedIds);
+      if (res.success) {
+        toast.success(res.message ?? "Productos eliminados", { id: toastId });
+        setSelectedIds([]);
+        router.refresh();
       } else {
         toast.error(res.error, { id: toastId });
       }
@@ -676,6 +724,17 @@ export function AdminProductsBoard({
                                 Importar otro
                               </Link>
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              disabled={isPending}
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              onClick={() =>
+                                handleDeleteProduct(product.id, product.name)
+                              }
+                            >
+                              <IconTrash className="size-4" />
+                              Eliminar
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -902,6 +961,21 @@ export function AdminProductsBoard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isPending}
+              onClick={handleBulkDelete}
+              className="h-8 gap-1.5 rounded-full text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              {isPending ? (
+                <IconLoader2 className="size-3.5 animate-spin" />
+              ) : (
+                <IconTrash className="size-3.5" />
+              )}
+              Eliminar
+            </Button>
 
             <Button
               variant="ghost"

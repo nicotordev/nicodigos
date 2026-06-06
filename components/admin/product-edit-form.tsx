@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { IconX } from "@tabler/icons-react";
+import { IconTrash, IconX } from "@tabler/icons-react";
 import {
   mapProductImagesToGallery,
   ProductGalleryEditor,
@@ -26,7 +26,10 @@ import {
   ProductTrailerEditor,
   type TrailerItem,
 } from "@/components/admin/product-trailer-editor";
-import { updateProductAction } from "@/lib/admin/products/actions";
+import {
+  deleteProductAction,
+  updateProductAction,
+} from "@/lib/admin/products/actions";
 import type { AdminProductEditData } from "@/lib/admin/products/get-product";
 import type {
   SystemRequirementInput,
@@ -59,6 +62,18 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -437,7 +452,12 @@ export function ProductEditForm({
                         <span>{tag}</span>
                         <button
                           type="button"
-                          onClick={() => updateField("tags", form.tags.filter((t) => t !== tag))}
+                          onClick={() =>
+                            updateField(
+                              "tags",
+                              form.tags.filter((t) => t !== tag),
+                            )
+                          }
                           className="text-muted-foreground hover:text-foreground shrink-0 rounded-full focus:outline-none transition-colors"
                           title="Eliminar etiqueta"
                         >
@@ -617,6 +637,60 @@ export function ProductEditForm({
           <Link href="/admin/products">Volver al listado</Link>
         </Button>
       </div>
+
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive">Zona de peligro</CardTitle>
+          <CardDescription>
+            Elimina este producto del catálogo. Los pedidos ya realizados
+            conservan su historial; se quitará de carritos y listas de deseos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="destructive" disabled={isPending}>
+                <IconTrash className="size-4" />
+                Eliminar producto
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar «{product.name}»?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción no se puede deshacer. El producto desaparecerá del
+                  catálogo y ya no podrás volver a importarlo con el mismo slug
+                  sin crear uno nuevo.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={isPending}
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await deleteProductAction(product.id);
+                      if (res.success) {
+                        toast.success(
+                          res.message ?? "Producto eliminado correctamente",
+                        );
+                        router.push("/admin/products");
+                        router.refresh();
+                        return;
+                      }
+                      toast.error(res.error);
+                    });
+                  }}
+                >
+                  {isPending ? <Spinner className="size-4" /> : null}
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      </Card>
     </form>
   );
 }
